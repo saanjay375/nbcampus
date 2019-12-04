@@ -1,0 +1,260 @@
+postgres=> \o /tmp/setting.txt
+postgres=>
+postgres=>
+postgres=> select name, setting, unit, category, pending_restart from pg_settings order by category,name,unit ;
+postgres=> \q
+23:43:35 54.252.190.125 (~)  >  >
+***[deploy@ip-172-31-4-198]:pts/0$ cat /tmp/setting.txt
+                name                 |              setting               | unit |                             category                              | pending_restart
+-------------------------------------+------------------------------------+------+-------------------------------------------------------------------+-----------------
+ autovacuum                          | on                                 |      | Autovacuum                                                        | f
+ autovacuum_analyze_scale_factor     | 0.02                               |      | Autovacuum                                                        | f
+ autovacuum_analyze_threshold        | 100                                |      | Autovacuum                                                        | f
+ autovacuum_freeze_max_age           | 1000000000                         |      | Autovacuum                                                        | f
+ autovacuum_max_workers              | 6                                  |      | Autovacuum                                                        | f
+ autovacuum_multixact_freeze_max_age | 400000000                          |      | Autovacuum                                                        | f
+ autovacuum_naptime                  | 180                                | s    | Autovacuum                                                        | f
+ autovacuum_vacuum_cost_delay        | 10                                 | ms   | Autovacuum                                                        | f
+ autovacuum_vacuum_cost_limit        | -1                                 |      | Autovacuum                                                        | f
+ autovacuum_vacuum_scale_factor      | 0.02                               |      | Autovacuum                                                        | f
+ autovacuum_vacuum_threshold         | 100                                |      | Autovacuum                                                        | f
+ client_encoding                     | UTF8                               |      | Client Connection Defaults / Locale and Formatting                | f
+ DateStyle                           | ISO, MDY                           |      | Client Connection Defaults / Locale and Formatting                | f
+ default_text_search_config          | pg_catalog.english                 |      | Client Connection Defaults / Locale and Formatting                | f
+ extra_float_digits                  | 0                                  |      | Client Connection Defaults / Locale and Formatting                | f
+ IntervalStyle                       | postgres                           |      | Client Connection Defaults / Locale and Formatting                | f
+ lc_collate                          | en_US.UTF-8                        |      | Client Connection Defaults / Locale and Formatting                | f
+ lc_ctype                            | en_US.UTF-8                        |      | Client Connection Defaults / Locale and Formatting                | f
+ lc_messages                         | C                                  |      | Client Connection Defaults / Locale and Formatting                | f
+ lc_monetary                         | C                                  |      | Client Connection Defaults / Locale and Formatting                | f
+ lc_numeric                          | C                                  |      | Client Connection Defaults / Locale and Formatting                | f
+ lc_time                             | C                                  |      | Client Connection Defaults / Locale and Formatting                | f
+ server_encoding                     | UTF8                               |      | Client Connection Defaults / Locale and Formatting                | f
+ TimeZone                            | GMT                                |      | Client Connection Defaults / Locale and Formatting                | f
+ timezone_abbreviations              | Default                            |      | Client Connection Defaults / Locale and Formatting                | f
+ gin_fuzzy_search_limit              | 0                                  |      | Client Connection Defaults / Other Defaults                       | f
+ tcp_keepalives_count                | 0                                  |      | Client Connection Defaults / Other Defaults                       | f
+ tcp_keepalives_idle                 | 0                                  | s    | Client Connection Defaults / Other Defaults                       | f
+ tcp_keepalives_interval             | 0                                  | s    | Client Connection Defaults / Other Defaults                       | f
+ local_preload_libraries             |                                    |      | Client Connection Defaults / Shared Library Preloading            | f
+ bytea_output                        | hex                                |      | Client Connection Defaults / Statement Behavior                   | f
+ check_function_bodies               | on                                 |      | Client Connection Defaults / Statement Behavior                   | f
+ default_tablespace                  |                                    |      | Client Connection Defaults / Statement Behavior                   | f
+ default_transaction_deferrable      | off                                |      | Client Connection Defaults / Statement Behavior                   | f
+ default_transaction_isolation       | read committed                     |      | Client Connection Defaults / Statement Behavior                   | f
+ default_transaction_read_only       | off                                |      | Client Connection Defaults / Statement Behavior                   | f
+ gin_pending_list_limit              | 4096                               | kB   | Client Connection Defaults / Statement Behavior                   | f
+ idle_in_transaction_session_timeout | 0                                  | ms   | Client Connection Defaults / Statement Behavior                   | f
+ lock_timeout                        | 0                                  | ms   | Client Connection Defaults / Statement Behavior                   | f
+ search_path                         | "$user", public                    |      | Client Connection Defaults / Statement Behavior                   | f
+ session_replication_role            | origin                             |      | Client Connection Defaults / Statement Behavior                   | f
+ statement_timeout                   | 0                                  | ms   | Client Connection Defaults / Statement Behavior                   | f
+ temp_tablespaces                    |                                    |      | Client Connection Defaults / Statement Behavior                   | f
+ transaction_deferrable              | off                                |      | Client Connection Defaults / Statement Behavior                   | f
+ transaction_isolation               | read committed                     |      | Client Connection Defaults / Statement Behavior                   | f
+ transaction_read_only               | off                                |      | Client Connection Defaults / Statement Behavior                   | f
+ vacuum_freeze_min_age               | 10000000                           |      | Client Connection Defaults / Statement Behavior                   | f
+ vacuum_freeze_table_age             | 800000000                          |      | Client Connection Defaults / Statement Behavior                   | f
+ vacuum_multixact_freeze_min_age     | 5000000                            |      | Client Connection Defaults / Statement Behavior                   | f
+ vacuum_multixact_freeze_table_age   | 150000000                          |      | Client Connection Defaults / Statement Behavior                   | f
+ xmlbinary                           | base64                             |      | Client Connection Defaults / Statement Behavior                   | f
+ xmloption                           | content                            |      | Client Connection Defaults / Statement Behavior                   | f
+ bonjour                             | off                                |      | Connections and Authentication / Connection Settings              | f
+ bonjour_name                        |                                    |      | Connections and Authentication / Connection Settings              | f
+ listen_addresses                    | *                                  |      | Connections and Authentication / Connection Settings              | f
+ max_connections                     | 1664                               |      | Connections and Authentication / Connection Settings              | f
+ port                                | 5432                               |      | Connections and Authentication / Connection Settings              | f
+ superuser_reserved_connections      | 3                                  |      | Connections and Authentication / Connection Settings              | f
+ unix_socket_group                   |                                    |      | Connections and Authentication / Connection Settings              | f
+ unix_socket_permissions             | 0777                               |      | Connections and Authentication / Connection Settings              | f
+ authentication_timeout              | 60                                 | s    | Connections and Authentication / Security and Authentication      | f
+ db_user_namespace                   | off                                |      | Connections and Authentication / Security and Authentication      | f
+ krb_caseins_users                   | off                                |      | Connections and Authentication / Security and Authentication      | f
+ password_encryption                 | on                                 |      | Connections and Authentication / Security and Authentication      | f
+ row_security                        | on                                 |      | Connections and Authentication / Security and Authentication      | f
+ ssl                                 | on                                 |      | Connections and Authentication / Security and Authentication      | f
+ ssl_ca_file                         | root.crt                           |      | Connections and Authentication / Security and Authentication      | f
+ ssl_cert_file                       | server.crt                         |      | Connections and Authentication / Security and Authentication      | f
+ ssl_crl_file                        |                                    |      | Connections and Authentication / Security and Authentication      | f
+ ssl_key_file                        | server.key                         |      | Connections and Authentication / Security and Authentication      | f
+ ssl_prefer_server_ciphers           | on                                 |      | Connections and Authentication / Security and Authentication      | f
+ pg_stat_statements.max              | 10000                              |      | Customized Options                                                | f
+ pg_stat_statements.save             | on                                 |      | Customized Options                                                | f
+ pg_stat_statements.track            | all                                |      | Customized Options                                                | f
+ pg_stat_statements.track_utility    | on                                 |      | Customized Options                                                | f
+ allow_system_table_mods             | off                                |      | Developer Options                                                 | f
+ ignore_checksum_failure             | off                                |      | Developer Options                                                 | f
+ ignore_system_indexes               | off                                |      | Developer Options                                                 | f
+ post_auth_delay                     | 0                                  | s    | Developer Options                                                 | f
+ pre_auth_delay                      | 0                                  | s    | Developer Options                                                 | f
+ trace_notify                        | off                                |      | Developer Options                                                 | f
+ trace_recovery_messages             | log                                |      | Developer Options                                                 | f
+ trace_sort                          | off                                |      | Developer Options                                                 | f
+ zero_damaged_pages                  | off                                |      | Developer Options                                                 | f
+ exit_on_error                       | off                                |      | Error Handling                                                    | f
+ restart_after_crash                 | on                                 |      | Error Handling                                                    | f
+ deadlock_timeout                    | 1000                               | ms   | Lock Management                                                   | f
+ max_locks_per_transaction           | 128                                |      | Lock Management                                                   | f
+ max_pred_locks_per_transaction      | 64                                 |      | Lock Management                                                   | f
+ block_size                          | 8192                               |      | Preset Options                                                    | f
+ data_checksums                      | off                                |      | Preset Options                                                    | f
+ debug_assertions                    | off                                |      | Preset Options                                                    | f
+ integer_datetimes                   | on                                 |      | Preset Options                                                    | f
+ max_function_args                   | 100                                |      | Preset Options                                                    | f
+ max_identifier_length               | 63                                 |      | Preset Options                                                    | f
+ max_index_keys                      | 32                                 |      | Preset Options                                                    | f
+ segment_size                        | 131072                             | 8kB  | Preset Options                                                    | f
+ server_version                      | 9.6.3                              |      | Preset Options                                                    | f
+ server_version_num                  | 90603                              |      | Preset Options                                                    | f
+ wal_block_size                      | 8192                               |      | Preset Options                                                    | f
+ wal_segment_size                    | 2048                               | 8kB  | Preset Options                                                    | f
+ cluster_name                        |                                    |      | Process Title                                                     | f
+ update_process_title                | on                                 |      | Process Title                                                     | f
+ geqo                                | on                                 |      | Query Tuning / Genetic Query Optimizer                            | f
+ geqo_effort                         | 5                                  |      | Query Tuning / Genetic Query Optimizer                            | f
+ geqo_generations                    | 0                                  |      | Query Tuning / Genetic Query Optimizer                            | f
+ geqo_pool_size                      | 0                                  |      | Query Tuning / Genetic Query Optimizer                            | f
+ geqo_seed                           | 0                                  |      | Query Tuning / Genetic Query Optimizer                            | f
+ geqo_selection_bias                 | 2                                  |      | Query Tuning / Genetic Query Optimizer                            | f
+ geqo_threshold                      | 12                                 |      | Query Tuning / Genetic Query Optimizer                            | f
+ constraint_exclusion                | partition                          |      | Query Tuning / Other Planner Options                              | f
+ cursor_tuple_fraction               | 0.1                                |      | Query Tuning / Other Planner Options                              | f
+ default_statistics_target           | 100                                |      | Query Tuning / Other Planner Options                              | f
+ force_parallel_mode                 | off                                |      | Query Tuning / Other Planner Options                              | f
+ from_collapse_limit                 | 8                                  |      | Query Tuning / Other Planner Options                              | f
+ join_collapse_limit                 | 8                                  |      | Query Tuning / Other Planner Options                              | f
+ cpu_index_tuple_cost                | 0.005                              |      | Query Tuning / Planner Cost Constants                             | f
+ cpu_operator_cost                   | 0.0025                             |      | Query Tuning / Planner Cost Constants                             | f
+ cpu_tuple_cost                      | 0.03                               |      | Query Tuning / Planner Cost Constants                             | f
+ effective_cache_size                | 26214400                           | 8kB  | Query Tuning / Planner Cost Constants                             | f
+ min_parallel_relation_size          | 1024                               | 8kB  | Query Tuning / Planner Cost Constants                             | f
+ parallel_setup_cost                 | 1000                               |      | Query Tuning / Planner Cost Constants                             | f
+ parallel_tuple_cost                 | 0.1                                |      | Query Tuning / Planner Cost Constants                             | f
+ random_page_cost                    | 1.5                                |      | Query Tuning / Planner Cost Constants                             | f
+ seq_page_cost                       | 1                                  |      | Query Tuning / Planner Cost Constants                             | f
+ enable_bitmapscan                   | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ enable_hashagg                      | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ enable_hashjoin                     | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ enable_indexonlyscan                | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ enable_indexscan                    | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ enable_material                     | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ enable_mergejoin                    | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ enable_nestloop                     | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ enable_seqscan                      | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ enable_sort                         | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ enable_tidscan                      | on                                 |      | Query Tuning / Planner Method Configuration                       | f
+ track_commit_timestamp              | off                                |      | Replication                                                       | f
+ synchronous_standby_names           |                                    |      | Replication / Master Server                                       | f
+ vacuum_defer_cleanup_age            | 0                                  |      | Replication / Master Server                                       | f
+ max_replication_slots               | 0                                  |      | Replication / Sending Servers                                     | f
+ max_wal_senders                     | 5                                  |      | Replication / Sending Servers                                     | f
+ wal_keep_segments                   | 2048                               |      | Replication / Sending Servers                                     | f
+ wal_sender_timeout                  | 60000                              | ms   | Replication / Sending Servers                                     | f
+ hot_standby                         | on                                 |      | Replication / Standby Servers                                     | f
+ hot_standby_feedback                | on                                 |      | Replication / Standby Servers                                     | f
+ max_standby_archive_delay           | 30000                              | ms   | Replication / Standby Servers                                     | f
+ max_standby_streaming_delay         | -1                                 | ms   | Replication / Standby Servers                                     | f
+ wal_receiver_status_interval        | 10                                 | s    | Replication / Standby Servers                                     | f
+ wal_receiver_timeout                | 60000                              | ms   | Replication / Standby Servers                                     | f
+ wal_retrieve_retry_interval         | 5000                               | ms   | Replication / Standby Servers                                     | f
+ application_name                    | psql                               |      | Reporting and Logging / What to Log                               | f
+ debug_pretty_print                  | on                                 |      | Reporting and Logging / What to Log                               | f
+ debug_print_parse                   | off                                |      | Reporting and Logging / What to Log                               | f
+ debug_print_plan                    | off                                |      | Reporting and Logging / What to Log                               | f
+ debug_print_rewritten               | off                                |      | Reporting and Logging / What to Log                               | f
+ log_autovacuum_min_duration         | 0                                  | ms   | Reporting and Logging / What to Log                               | f
+ log_checkpoints                     | on                                 |      | Reporting and Logging / What to Log                               | f
+ log_connections                     | off                                |      | Reporting and Logging / What to Log                               | f
+ log_disconnections                  | off                                |      | Reporting and Logging / What to Log                               | f
+ log_duration                        | off                                |      | Reporting and Logging / What to Log                               | f
+ log_error_verbosity                 | default                            |      | Reporting and Logging / What to Log                               | f
+ log_hostname                        | off                                |      | Reporting and Logging / What to Log                               | f
+ log_line_prefix                     | %m: proc=%p,user=%u,db=%d,host=%r  |      | Reporting and Logging / What to Log                               | f
+ log_lock_waits                      | on                                 |      | Reporting and Logging / What to Log                               | f
+ log_replication_commands            | off                                |      | Reporting and Logging / What to Log                               | f
+ log_statement                       | none                               |      | Reporting and Logging / What to Log                               | f
+ log_temp_files                      | -1                                 | kB   | Reporting and Logging / What to Log                               | f
+ log_timezone                        | GMT                                |      | Reporting and Logging / What to Log                               | f
+ client_min_messages                 | notice                             |      | Reporting and Logging / When to Log                               | f
+ log_min_duration_statement          | 2000                               | ms   | Reporting and Logging / When to Log                               | f
+ log_min_error_statement             | error                              |      | Reporting and Logging / When to Log                               | f
+ log_min_messages                    | warning                            |      | Reporting and Logging / When to Log                               | f
+ event_source                        | PostgreSQL                         |      | Reporting and Logging / Where to Log                              | f
+ log_destination                     | csvlog                             |      | Reporting and Logging / Where to Log                              | f
+ log_file_mode                       | 0600                               |      | Reporting and Logging / Where to Log                              | f
+ logging_collector                   | on                                 |      | Reporting and Logging / Where to Log                              | f
+ log_rotation_age                    | 1440                               | min  | Reporting and Logging / Where to Log                              | f
+ log_rotation_size                   | 102400                             | kB   | Reporting and Logging / Where to Log                              | f
+ log_truncate_on_rotation            | off                                |      | Reporting and Logging / Where to Log                              | f
+ syslog_facility                     | local0                             |      | Reporting and Logging / Where to Log                              | f
+ syslog_ident                        | postgres                           |      | Reporting and Logging / Where to Log                              | f
+ syslog_sequence_numbers             | on                                 |      | Reporting and Logging / Where to Log                              | f
+ syslog_split_messages               | on                                 |      | Reporting and Logging / Where to Log                              | f
+ backend_flush_after                 | 0                                  | 8kB  | Resource Usage / Asynchronous Behavior                            | f
+ effective_io_concurrency            | 1                                  |      | Resource Usage / Asynchronous Behavior                            | f
+ max_parallel_workers_per_gather     | 0                                  |      | Resource Usage / Asynchronous Behavior                            | f
+ max_worker_processes                | 8                                  |      | Resource Usage / Asynchronous Behavior                            | f
+ old_snapshot_threshold              | -1                                 | min  | Resource Usage / Asynchronous Behavior                            | f
+ bgwriter_delay                      | 100                                | ms   | Resource Usage / Background Writer                                | f
+ bgwriter_flush_after                | 64                                 | 8kB  | Resource Usage / Background Writer                                | f
+ bgwriter_lru_maxpages               | 100                                |      | Resource Usage / Background Writer                                | f
+ bgwriter_lru_multiplier             | 4                                  |      | Resource Usage / Background Writer                                | f
+ vacuum_cost_delay                   | 0                                  | ms   | Resource Usage / Cost-Based Vacuum Delay                          | f
+ vacuum_cost_limit                   | 800                                |      | Resource Usage / Cost-Based Vacuum Delay                          | f
+ vacuum_cost_page_dirty              | 20                                 |      | Resource Usage / Cost-Based Vacuum Delay                          | f
+ vacuum_cost_page_hit                | 1                                  |      | Resource Usage / Cost-Based Vacuum Delay                          | f
+ vacuum_cost_page_miss               | 10                                 |      | Resource Usage / Cost-Based Vacuum Delay                          | f
+ temp_file_limit                     | -1                                 | kB   | Resource Usage / Disk                                             | f
+ max_files_per_process               | 1600                               |      | Resource Usage / Kernel Resources                                 | f
+ autovacuum_work_mem                 | -1                                 | kB   | Resource Usage / Memory                                           | f
+ dynamic_shared_memory_type          | posix                              |      | Resource Usage / Memory                                           | f
+ huge_pages                          | try                                |      | Resource Usage / Memory                                           | f
+ maintenance_work_mem                | 1048576                            | kB   | Resource Usage / Memory                                           | f
+ max_prepared_transactions           | 0                                  |      | Resource Usage / Memory                                           | f
+ max_stack_depth                     | 6144                               | kB   | Resource Usage / Memory                                           | f
+ replacement_sort_tuples             | 150000                             |      | Resource Usage / Memory                                           | f
+ shared_buffers                      | 4194304                            | 8kB  | Resource Usage / Memory                                           | f
+ temp_buffers                        | 1024                               | 8kB  | Resource Usage / Memory                                           | f
+ track_activity_query_size           | 1024                               |      | Resource Usage / Memory                                           | f
+ work_mem                            | 30720                              | kB   | Resource Usage / Memory                                           | f
+ log_executor_stats                  | off                                |      | Statistics / Monitoring                                           | f
+ log_parser_stats                    | off                                |      | Statistics / Monitoring                                           | f
+ log_planner_stats                   | off                                |      | Statistics / Monitoring                                           | f
+ log_statement_stats                 | off                                |      | Statistics / Monitoring                                           | f
+ track_activities                    | on                                 |      | Statistics / Query and Index Statistics Collector                 | f
+ track_counts                        | on                                 |      | Statistics / Query and Index Statistics Collector                 | f
+ track_functions                     | none                               |      | Statistics / Query and Index Statistics Collector                 | f
+ track_io_timing                     | off                                |      | Statistics / Query and Index Statistics Collector                 | f
+ transform_null_equals               | off                                |      | Version and Platform Compatibility / Other Platforms and Clients  | f
+ array_nulls                         | on                                 |      | Version and Platform Compatibility / Previous PostgreSQL Versions | f
+ backslash_quote                     | safe_encoding                      |      | Version and Platform Compatibility / Previous PostgreSQL Versions | f
+ default_with_oids                   | off                                |      | Version and Platform Compatibility / Previous PostgreSQL Versions | f
+ escape_string_warning               | on                                 |      | Version and Platform Compatibility / Previous PostgreSQL Versions | f
+ lo_compat_privileges                | off                                |      | Version and Platform Compatibility / Previous PostgreSQL Versions | f
+ operator_precedence_warning         | off                                |      | Version and Platform Compatibility / Previous PostgreSQL Versions | f
+ quote_all_identifiers               | off                                |      | Version and Platform Compatibility / Previous PostgreSQL Versions | f
+ sql_inheritance                     | on                                 |      | Version and Platform Compatibility / Previous PostgreSQL Versions | f
+ standard_conforming_strings         | on                                 |      | Version and Platform Compatibility / Previous PostgreSQL Versions | f
+ synchronize_seqscans                | on                                 |      | Version and Platform Compatibility / Previous PostgreSQL Versions | f
+ archive_command                     | /bin/true                          |      | Write-Ahead Log / Archiving                                       | f
+ archive_mode                        | on                                 |      | Write-Ahead Log / Archiving                                       | f
+ archive_timeout                     | 0                                  | s    | Write-Ahead Log / Archiving                                       | f
+ checkpoint_completion_target        | 0.5                                |      | Write-Ahead Log / Checkpoints                                     | f
+ checkpoint_flush_after              | 32                                 | 8kB  | Write-Ahead Log / Checkpoints                                     | f
+ checkpoint_timeout                  | 300                                | s    | Write-Ahead Log / Checkpoints                                     | f
+ checkpoint_warning                  | 30                                 | s    | Write-Ahead Log / Checkpoints                                     | f
+ max_wal_size                        | 300                                | 16MB | Write-Ahead Log / Checkpoints                                     | f
+ min_wal_size                        | 5                                  | 16MB | Write-Ahead Log / Checkpoints                                     | f
+ commit_delay                        | 0                                  |      | Write-Ahead Log / Settings                                        | f
+ commit_siblings                     | 5                                  |      | Write-Ahead Log / Settings                                        | f
+ fsync                               | on                                 |      | Write-Ahead Log / Settings                                        | f
+ full_page_writes                    | on                                 |      | Write-Ahead Log / Settings                                        | f
+ synchronous_commit                  | on                                 |      | Write-Ahead Log / Settings                                        | f
+ wal_buffers                         | 8192                               | 8kB  | Write-Ahead Log / Settings                                        | f
+ wal_compression                     | off                                |      | Write-Ahead Log / Settings                                        | f
+ wal_level                           | replica                            |      | Write-Ahead Log / Settings                                        | f
+ wal_log_hints                       | off                                |      | Write-Ahead Log / Settings                                        | f
+ wal_sync_method                     | fdatasync                          |      | Write-Ahead Log / Settings                                        | f
+ wal_writer_delay                    | 200                                | ms   | Write-Ahead Log / Settings                                        | f
+ wal_writer_flush_after              | 128                                | 8kB  | Write-Ahead Log / Settings                                        | f
+(250 rows)

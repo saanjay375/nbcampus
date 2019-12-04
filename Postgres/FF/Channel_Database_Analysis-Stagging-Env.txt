@@ -1,0 +1,4 @@
+Channel Database Analysis.
+
+1. Parallelism is disable. max_parallel_workers_per_gather is 0
+

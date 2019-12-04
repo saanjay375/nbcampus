@@ -1,0 +1,595 @@
+---------------------------------********* New Topic ---------------------------------------
+Monitor --
+--* show running queries (pre 9.2)
+SELECT procpid, age(clock_timestamp(), query_start), usename, current_query 
+FROM pg_stat_activity 
+WHERE current_query != '<IDLE>' AND current_query NOT ILIKE '%pg_stat_activity%' 
+ORDER BY query_start desc;   
+
+--* show running queries (9.2)
+SELECT pid, age(clock_timestamp(), query_start), usename, query 
+FROM pg_stat_activity 
+WHERE query != '<IDLE>' AND query NOT ILIKE '%pg_stat_activity%' 
+ORDER BY query_start desc;
+
+--* Queries : Find queries running since last 5 mins.
+SELECT
+  pid,
+  now() - pg_stat_activity.query_start AS duration, 
+  query,
+  state
+FROM pg_stat_activity
+WHERE (now() - pg_stat_activity.query_start) > interval '5 minutes';
+
+
+--* kill running query
+SELECT pg_cancel_backend(procpid);
+
+--* kill idle query
+SELECT pg_terminate_backend(procpid);
+
+--* vacuum command
+VACUUM (VERBOSE, ANALYZE);
+
+--* all database users
+select * from pg_stat_activity where current_query not like '<%';
+
+--* List of Installed extensions
+
+SELECT * FROM pg_extension
+
+--* all databases and their sizes
+SELECT pg_database.datname as "database_name", pg_database_size(pg_database.datname)/1024/1024 AS size_in_mb FROM pg_database ORDER by size_in_mb DESC;
+
+--* cache hit rates (should not be less than 0.99)
+SELECT sum(heap_blks_read) as heap_read, sum(heap_blks_hit)  as heap_hit, (sum(heap_blks_hit) - sum(heap_blks_read)) / sum(heap_blks_hit) as ratio
+FROM pg_statio_user_tables;
+
+--* table index usage rates (should not be less than 0.99)
+SELECT relname, 
+  CASE WHEN (seq_scan + idx_scan) != 0
+    THEN 100.0 * idx_scan / (seq_scan + idx_scan) 
+    ELSE 0
+  END AS percent_of_times_index_used,
+  n_live_tup AS rows_in_table
+FROM pg_stat_user_tables 
+ORDER BY n_live_tup DESC;
+
+--* how many indexes are in cache
+SELECT sum(idx_blks_read) as idx_read, sum(idx_blks_hit)  as idx_hit, (sum(idx_blks_hit) - sum(idx_blks_read)) / sum(idx_blks_hit) as ratio
+FROM pg_statio_user_indexes;
+
+--* Table vacuum Information
+select relname, n_dead_tup,last_vacuum, last_autovacuum, last_analyze, last_autoanalyze from pg_stat_user_tables order by last_autovacuum,last_vacuum,last_autoanalyze,last_analyze;
+
+--* Queries running more than 2 mins
+SELECT now() - query_start as "runtime", usename, datname, waiting, state, query
+  FROM  pg_stat_activity
+  WHERE now() - query_start > '2 minutes'::interval
+ ORDER BY runtime DESC;
+ 
+--* Database Size (as in disk space)
+SELECT d.datname AS Name, pg_catalog.pg_get_userbyid(d.datdba) AS Owner,
+  CASE WHEN pg_catalog.has_database_privilege(d.datname, 'CONNECT')
+    THEN pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(d.datname)) 
+    ELSE 'No Access' 
+  END AS SIZE 
+FROM pg_catalog.pg_database d 
+ORDER BY 
+  CASE WHEN pg_catalog.has_database_privilege(d.datname, 'CONNECT') 
+    THEN pg_catalog.pg_database_size(d.datname)
+    ELSE NULL 
+  END;
+  
+--* Table Size (as in disk space)
+SELECT nspname || '.' || relname AS "relation",
+   pg_size_pretty(pg_total_relation_size(C.oid)) AS "total_size"
+ FROM pg_class C
+ LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace)
+ WHERE nspname NOT IN ('pg_catalog', 'information_schema')
+   AND C.relkind <> 'i'
+   AND nspname !~ '^pg_toast'
+ ORDER BY pg_total_relation_size(C.oid) DESC;  
+  
+--* Schema Size:
+SELECT schema_name, 
+       pg_size_pretty(sum(table_size)) "TableSize",
+       round((sum(table_size) / database_size) * 100,2) "pctofDBSize"
+FROM (
+  SELECT pg_catalog.pg_namespace.nspname as schema_name,
+        pg_relation_size(pg_catalog.pg_class.oid) as "table_size",
+         sum(pg_relation_size(pg_catalog.pg_class.oid)) over () as database_size
+  FROM   pg_catalog.pg_class
+     JOIN pg_catalog.pg_namespace ON relnamespace = pg_catalog.pg_namespace.oid
+) t
+GROUP BY schema_name, database_size 
+order by 3 desc;
+
+--* Index :- List unused indexes : parameter track_counts has to remain “on” for the query to work, otherwise index usage is not tracked in pg_stat_user_indexes. But you must not change that parameter anyway, otherwise autovacuum will stop working.
+
+All Unused indexes in database -
+--------------------------------
+
+SELECT r.rolname, s.schemaname,
+       s.relname AS tablename,
+       s.indexrelname AS indexname,
+       pg_size_pretty(pg_relation_size(s.indexrelid)) AS index_size
+FROM pg_catalog.pg_stat_all_indexes s
+   JOIN pg_catalog.pg_index i ON s.indexrelid = i.indexrelid
+   Join pg_catalog.pg_class c on i.indexrelid  = c.oid
+   join pg_catalog.pg_roles r  on r.oid = c.relowner
+WHERE s.idx_scan = 0      -- has never been scanned
+  AND 0 <>ALL (i.indkey)  -- no index column is an expression
+  AND NOT i.indisunique   -- is not a UNIQUE index
+  AND NOT EXISTS          -- does not enforce a constraint
+         (SELECT 1 FROM pg_catalog.pg_constraint c
+          WHERE c.conindid = s.indexrelid)
+ORDER BY pg_relation_size(s.indexrelid) DESC;
+
+All unused indexes of a user in database -
+------------------------------------------
+
+SELECT r.rolname, s.schemaname,
+       s.relname AS tablename,
+       s.indexrelname AS indexname,
+       pg_size_pretty(pg_relation_size(s.indexrelid)) AS index_size
+FROM pg_catalog.pg_stat_all_indexes s
+   JOIN pg_catalog.pg_index i ON s.indexrelid = i.indexrelid
+   Join pg_catalog.pg_class c on i.indexrelid  = c.oid
+   join pg_catalog.pg_roles r  on r.oid = c.relowner
+WHERE s.idx_scan = 0      -- has never been scanned
+  AND 0 <>ALL (i.indkey)  -- no index column is an expression
+  AND NOT i.indisunique   -- is not a UNIQUE index
+  AND NOT EXISTS          -- does not enforce a constraint
+         (SELECT 1 FROM pg_catalog.pg_constraint c
+          WHERE c.conindid = s.indexrelid)
+  and r.rolname='postgres'
+ORDER BY pg_relation_size(s.indexrelid) DESC;
+
+Space occupied by all unused indexes in database -
+---------------------------------------------------
+SELECT   pg_size_pretty(sum(pg_relation_size(s.indexrelid))) AS total_index_size
+FROM pg_catalog.pg_stat_all_indexes s
+   JOIN pg_catalog.pg_index i ON s.indexrelid = i.indexrelid
+   Join pg_catalog.pg_class c on i.indexrelid  = c.oid
+   join pg_catalog.pg_roles r  on r.oid = c.relowner
+WHERE s.idx_scan = 0      -- has never been scanned
+  AND 0 <>ALL (i.indkey)  -- no index column is an expression
+  AND NOT i.indisunique   -- is not a UNIQUE index
+  AND NOT EXISTS          -- does not enforce a constraint
+         (SELECT 1 FROM pg_catalog.pg_constraint c
+          WHERE c.conindid = s.indexrelid)
+ORDER BY pg_relation_size(s.indexrelid) DESC;
+
+--* Connections : kill all running connections of a current database
+SELECT pg_terminate_backend(pg_stat_activity.pid)
+FROM pg_stat_activity
+WHERE datname = current_database()  
+  AND pid <> pg_backend_pid();  
+  
+-- Locks: Blocked and Blocking activities:
+SELECT blocked_locks.pid     AS blocked_pid,
+         blocked_activity.usename  AS blocked_user,
+         blocking_locks.pid     AS blocking_pid,
+         blocking_activity.usename AS blocking_user,
+         blocked_activity.query    AS blocked_statement,
+         blocking_activity.query   AS current_statement_in_blocking_process
+   FROM  pg_catalog.pg_locks         blocked_locks
+    JOIN pg_catalog.pg_stat_activity blocked_activity  ON blocked_activity.pid = blocked_locks.pid
+    JOIN pg_catalog.pg_locks         blocking_locks 
+        ON blocking_locks.locktype = blocked_locks.locktype
+        AND blocking_locks.DATABASE IS NOT DISTINCT FROM blocked_locks.DATABASE
+        AND blocking_locks.relation IS NOT DISTINCT FROM blocked_locks.relation
+        AND blocking_locks.page IS NOT DISTINCT FROM blocked_locks.page
+        AND blocking_locks.tuple IS NOT DISTINCT FROM blocked_locks.tuple
+        AND blocking_locks.virtualxid IS NOT DISTINCT FROM blocked_locks.virtualxid
+        AND blocking_locks.transactionid IS NOT DISTINCT FROM blocked_locks.transactionid
+        AND blocking_locks.classid IS NOT DISTINCT FROM blocked_locks.classid
+        AND blocking_locks.objid IS NOT DISTINCT FROM blocked_locks.objid
+        AND blocking_locks.objsubid IS NOT DISTINCT FROM blocked_locks.objsubid
+        AND blocking_locks.pid != blocked_locks.pid
+ 
+    JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
+   WHERE NOT blocked_locks.GRANTED;
+   
+--* Locks : With age information
+SELECT a.datname,
+         c.relname,
+         l.transactionid,
+         l.mode,
+         l.GRANTED,
+         a.usename,
+         a.current_query, 
+         a.query_start,
+         age(now(), a.query_start) AS "age", 
+         a.procpid 
+    FROM  pg_stat_activity a
+     JOIN pg_locks         l ON l.pid = a.procpid
+     JOIN pg_class         c ON c.oid = l.relation
+    ORDER BY a.query_start;
+
+--* Query: Query age, lock and query information
+SELECT
+  S.pid,
+  age(clock_timestamp(), query_start),
+  usename,
+  query,
+  L.mode,
+  L.locktype,
+  L.granted
+FROM pg_stat_activity S
+inner join pg_locks L on S.pid = L.pid 
+order by L.granted, L.pid DESC ;
+
+-- Query: Find Duplicate Rows in a PostgreSQL table.
+SELECT student_id, COUNT(student_id)
+FROM tbl_scores
+GROUP BY student_id
+HAVING COUNT(student_id)&amp;amp;gt; 1
+ORDER BY student_id;
+
+-- Table: Biggest tables/indexes and their sizes
+SELECT
+  nspname || '.' || relname AS "relation",
+  pg_size_pretty(pg_relation_size(C.oid)) AS "size"
+FROM pg_class C
+LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace)
+WHERE nspname NOT IN ('pg_catalog', 'information_schema')
+ORDER BY pg_relation_size(C.oid) DESC
+LIMIT 20;
+
+
+--* Table: Most bloated tables.
+SELECT relname,
+    seq_scan,
+    idx_scan,
+    n_live_tup,
+    n_dead_tup,
+    to_char(n_dead_tup/n_live_tup::real, '999D99')::real AS ratio,
+    pg_size_pretty(pg_relation_size(relid))
+FROM pg_stat_all_tables
+WHERE pg_relation_size(relid) > 1024 * 1024 AND
+    n_live_tup > 0
+ORDER BY n_dead_tup/n_live_tup::real DESC LIMIT 10;
+
+-- Table: Table Bloating information 
+with 
+	foo as (
+	  SELECT
+		schemaname, tablename, hdr, ma, bs,
+		SUM((1-null_frac)*avg_width) AS datawidth,
+		MAX(null_frac) AS maxfracsum,
+		hdr+(
+		  SELECT 1+COUNT(*)/8
+		  FROM pg_stats s2
+		  WHERE null_frac<>0 AND s2.schemaname = s.schemaname AND s2.tablename = s.tablename
+		) AS nullhdr
+	  FROM pg_stats s, (
+		SELECT
+		  (SELECT current_setting('block_size')::NUMERIC) AS bs,
+		  CASE WHEN SUBSTRING(v,12,3) IN ('8.0','8.1','8.2') THEN 27 ELSE 23 END AS hdr,
+		  CASE WHEN v ~ 'mingw32' THEN 8 ELSE 4 END AS ma
+		FROM (SELECT version() AS v) AS foo
+	  ) AS constants
+	  GROUP BY 1,2,3,4,5  
+	), 
+	rs as (
+	  SELECT
+		ma,bs,schemaname,tablename,
+		(datawidth+(hdr+ma-(CASE WHEN hdr%ma=0 THEN ma ELSE hdr%ma END)))::NUMERIC AS datahdr,
+		(maxfracsum*(nullhdr+ma-(CASE WHEN nullhdr%ma=0 THEN ma ELSE nullhdr%ma END))) AS nullhdr2
+	  FROM foo  
+	), 
+	sml as (
+	  SELECT
+		schemaname, tablename, cc.reltuples, cc.relpages, bs,
+		CEIL((cc.reltuples*((datahdr+ma-
+		  (CASE WHEN datahdr%ma=0 THEN ma ELSE datahdr%ma END))+nullhdr2+4))/(bs-20::FLOAT)) AS otta,
+		COALESCE(c2.relname,'?') AS iname, COALESCE(c2.reltuples,0) AS ituples, COALESCE(c2.relpages,0) AS ipages,
+		COALESCE(CEIL((c2.reltuples*(datahdr-12))/(bs-20::FLOAT)),0) AS iotta -- very rough approximation, assumes all cols
+	  FROM rs
+	  JOIN pg_class cc ON cc.relname = rs.tablename
+	  JOIN pg_namespace nn ON cc.relnamespace = nn.oid AND nn.nspname = rs.schemaname AND nn.nspname <> 'information_schema'
+	  LEFT JOIN pg_index i ON indrelid = cc.oid
+	  LEFT JOIN pg_class c2 ON c2.oid = i.indexrelid
+	)
+SELECT
+  current_database(), schemaname, tablename, /*reltuples::bigint, relpages::bigint, otta,*/
+  ROUND((CASE WHEN otta=0 THEN 0.0 ELSE sml.relpages::FLOAT/otta END)::NUMERIC,1) AS tbloat,
+  CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::BIGINT END AS wastedbytes,
+  iname, /*ituples::bigint, ipages::bigint, iotta,*/
+  ROUND((CASE WHEN iotta=0 OR ipages=0 THEN 0.0 ELSE ipages::FLOAT/iotta END)::NUMERIC,1) AS ibloat,
+  CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta) END AS wastedibytes
+FROM sml
+ORDER BY wastedbytes DESC	;
+  
+  
+--* Locking Monitor
+SELECT t.relname, l.locktype, page, virtualtransaction, pid, mode, granted 
+FROM pg_locks l, pg_stat_all_tables t 
+WHERE l.relation = t.relid ORDER BY relation asc;
+
+--* Dump database on remote host to file
+$ pg_dump -U username -h hostname databasename > dump.sql
+
+--* Import dump into existing database
+$ psql -d newdb -f dump.sql
+
+
+
+---------------------------------********* New Topic ---------------------------------------
+PostgreSQL AutoVacuum Mechanism and parameters :
+
+3 Important parameters to tune VACUUM/AutoVacuum to avoid transaction wraparound issue:
+
+Vacuum_Freeze_min_age & Vacuum_Multixact_Freeze_min_age: 
+------------------------------------------------------- This parameter will not trigger autovacuum but it drives the behaviour of already running autovacuum process. When Autovacuum (with XID wrap around) is in progress, then all already completed transactions in table which are older than vacuum_freeze_min_age will be marked as frozen.
+
+
+autovacuum_freeze_max_age  & autovacuum_multixact_freeze_max_age :
+----------------------------------------------------------- These are table level parameters. If age of latest Frozen transaction in table (pgclass.relfrozenxid) is older than autovacuum_freeze_max_age, then autovacuum will not only look for dead tuples but will also look for xid's to mark frozen. All the already committed transactions which are older than vacuum_freeze_min_age will be marked as frozen. Vacuum no longer usually scans the entire table; instead, it has a bitmap (called the visibility_map) which tells it which data pages in the table have reclaimable space, so that it scans only the portion of the table which is "dirty". Therefor, Vacuum process tend to skip static tables even if these are candidate of vacuum (with xid wrap around) as defined by parameter autovacuum_freeze_max_age.
+
+vacuum_freeze_table_age & vacuum_multixact_freeze_table_age :
+-------------------------------------------------------------
+ Vacuum_freeze_table_age is to compliment autovacuum_max_freeze_age. With this parameter in place, vacuum process with scan static tables i.e. tables without any changed block but having latest Frozen transaction XID (pgclass.relfrozenxid) older than vacuum_freeze_table_age .
+  
+   http://www.databasesoup.com/2012/09/freezing-your-tuples-off-part-1.html
+   http://www.databasesoup.com/2012/10/freezing-your-tuples-off-part-2.html
+   http://www.databasesoup.com/2012/09/freezing-your-tuples-off-part-3.html
+
+
+Important parameters driving vacuum behaviour.
+autovacuum_vacuum_scale_factor Or autovacuum_analyze_scale_factor : Fraction of the table records that will be added to the formula. For example, a value of 0.2 equals to 20% of the table records.
+autovacuum_vacuum_threshold Or autovacuum_analyze_threshold : Minimum number of obsolete records or dml’s needed to trigger an autovacuum.
+
+---------------------------------********* New Topic ---------------------------------------
+Memory Architecture :
+Instance Level Parameters 	|| Session Level Parameters  || Process Level Parameters
+shared_buffers				|| Temp_Buffers				 || work_mem
+wal_buffers 				   Maintenance_work_mem
+							   AutoVacuum_work_mem	
+							   
+---------------------------------********* New Topic --------------------------------------- Log Writer Process
+Log writer process writes contents of wal_buffers to wal files on below events.
+- checkpoint.
+- commit.
+- after wal_writer_delay (default 200ms)
+- after wal_writer_Flush_after mb(default 1MB) has been written in wal_buffers.	
+- Before Background Writer Process writes dirty buffers to disk.						   
+
+---------------------------------********* New Topic --------------------------------------- Background Writer Process.
+Writes dirty buffers from shared_buffers to disk on below events.
+
+- Checkpoint.
+- After bgwriter_delay ms ( default 200 ms)
+- After bgwriter_Flush_after  (default 512 KB) of dirty buffers in shared_buffers.
+
+---------------------------------********* New Topic --------------------------------------- Imp Cluster Parameters:
+File Locations
+	data_directory
+	config_file
+	hba_file
+	ident_file
+	external_pid_file
+Connection Settings
+	listen_addresses
+	port
+	max_connections
+	superuser_Reserved_connections
+	unix_socket_directories
+	unix_socket_group
+	unix_socket_permissions
+	tcp_keepalives_idle/interval/count
+	authentication_timeout
+	password_encryption
+Resource Consumption - Memory
+	shared_buffers
+	huge_pages
+	temp_buffers
+	max_prepared_transactions
+	work_mem
+	maintenance_work_mem
+	autovacuum_work_mem
+	max_stack_depth : Specifies the maximum safe depth of the server's execution stack. The ideal setting for this parameter is the actual stack size limit  
+	                  enforced by the kernel (as set by ulimit -s or local equivalent), less a safety margin of a megabyte or so
+Resource Consumption - Disk
+	temp_file_limit
+Resource Consumption - Kernel Resource Usage	
+	max_files_per_process
+Resource Consumption - Cost-based Vacuum Delay
+	vacuum_cost_delay : The length of time, in milliseconds, that the process will sleep when the cost limit has been exceeded
+	vacuum_cost_limit
+	vacuum_cost_page_hit
+	vacuum_cost_page_miss
+	vacuum_cost_page_dirty
+	vacuum_cost_limit
+Resource Consumption - Background Writer
+	bgwriter_delay (200ms)
+	bgwriter_flush_after
+	bgwriter_lru_maxpages
+	bgwriter_lru_multiplie
+Write Ahead Log
+	wal_level 
+	fsync 
+	wal_sync_method
+	synchronous_commit
+	full_page_writes
+	wal_log_hints
+	wal_compression
+	wal_buffers
+	wal_writer_delay (200ms)
+	wal_writer_flush_after (1MB)
+	commit_delay
+	commit_siblings
+Checkpoints
+	checkpoint_timeout (5 Min)
+	checkpoint_completion_target (.5 i.e. 50% of checkpoint_timeout)
+	checkpoint_flush_after (256Kb)
+	checkpoint_warning (30Sec)
+	max_wal_size 
+	min_wal_size 
+Archiving
+	archive_mode 
+	archive_command 
+	archive_timeout 
+Resource Consumption - Asynchronous Behavior
+	effective_io_concurrency : Sets the number of concurrent disk I/O operations that PostgreSQL expects can be executed simultaneously
+	max_worker_processes
+	max_parallel_workers_per_gather: the number of workers that can assist a sequential scan of a table;
+Replication
+	max_wal_senders 
+	max_replication_slots 
+	wal_keep_segments
+	wal_sender_timeout 
+	track_commit_timestamp 
+Master Server
+	synchronous_standby_names
+	vacuum_defer_cleanup_age 
+Standby Servers
+	hot_standby 
+	max_standby_archive_delay 
+	max_standby_streaming_delay 
+	wal_receiver_status_interval 
+	wal_receiver_timeout : Terminate replication connections that are inactive longer than the specified number of milliseconds
+	wal_retrieve_retry_interval :Specify how long the standby server should wait when WAL data is not available from any sources (streaming replication, local 
+	                             pg_xlog or WAL archive) before retrying to retrieve WAL data.
+
+Query Planning
+	enable_bitmapscan 
+	enable_hashagg
+	enable_hashjoin 
+	enable_indexscan 
+	enable_indexonlyscan 
+	enable_material 
+	enable_mergejoin 
+	enable_nestloop 
+	enable_seqscan 
+	enable_sort 
+Planner Cost Constants
+seq_page_cost is conventionally set to 1.0 and the other cost variables are set with reference to that
+	seq_page_cost: (default 1)
+	**random_page_cost: (default 4) Reducing this value relative to seq_page_cost will cause the system to prefer index scans;
+	effective_cache_size 
+	min_parallel_relation_size 
+	parallel_tuple_cost
+	parallel_setup_cost 
+	cpu_operator_cost 
+	cpu_index_tuple_cost 
+	cpu_tuple_cost 
+Other Planner Options
+	default_statistics_target: Larger values increase the time needed to do ANALYZE, but might improve the quality of the planner's estimates. The default is 100
+	force_parallel_mode 
+Where To Log
+	log_destination 
+	logging_collector: This parameter enables the logging collector, which is a background process that captures log messages sent to stderr and redirects        
+	                  them into log files.
+	log_directory 
+	log_filename  
+	log_file_mode 
+	log_rotation_age 
+	log_rotation_size 
+	log_truncate_on_rotation 
+When To Log
+	log_min_messages 
+	log_min_error_statement 
+	log_min_duration_statement 
+What To Log	
+	application_name 
+	log_checkpoint
+	log_connections
+	log_disconnections
+	log_duration
+	log_hostname
+	log_lock_waits 
+	log_statement
+	cluster_name 
+Run-time Statistics - 	Query and Index Statistics Collector
+	track_activities
+	track_activity_query_size 
+	track_counts 
+	track_io_timing : pg_stat_statements, pg_stat_database
+	track_functions 
+	stats_temp_directory 
+Run-time Statistics - 	Statistics Monitoring
+    log_statement_stats
+	log_parser_stat
+	log_planner_stats
+	log_executor_stats
+Automatic Vacuuming
+	autovacuum : track_counts must also be enabled for autovacuum to work
+	log_autovacuum_min_duration: Causes each action executed by autovacuum to be logged if it ran for at least the specified number of milliseconds.
+	autovacuum_max_workers: maximum number of autovacuum processes (other than the autovacuum launcher) that may be running at any one time
+	autovacuum_naptime 
+	autovacuum_vacuum_threshold: Specifies the minimum number of updated or deleted tuples needed to trigger a VACUUM in any one table.
+	autovacuum_analyze_threshold :Specifies the minimum number of inserted, updated or deleted tuples needed to trigger an ANALYZE in any one table. 
+	autovacuum_vacuum_scale_factor : Specifies a fraction of the table size to add to autovacuum_vacuum_threshold when deciding whether to trigger a VACUUM.
+	autovacuum_analyze_scale_factor: Specifies a fraction of the table size to add to autovacuum_analyze_threshold when deciding whether to trigger an ANALYZE.
+	autovacuum_freeze_max_age: Specifies the maximum age (in transactions) that a table's pg_class.relfrozenxid field can attain before a VACUUM operation is forced to prevent transaction ID wraparound within the table
+	Vacuum_Freeze_min_age & Vacuum_Multixact_Freeze_min_age: 
+	vacuum_freeze_table_age: The default is 150 million transactions. Although users can set this value anywhere from zero to two billions, VACUUM will silently 
+	                         limit the effective value to 95% of autovacuum_freeze_max_age.
+	vacuum_freeze_min_age: Specifies the cutoff age (in transactions) that VACUUM should use to decide whether to freeze row versions while scanning a table.
+	autovacuum_multixact_freeze_max_age
+	autovacuum_vacuum_cost_delay
+	autovacuum_vacuum_cost_limit : If -1 is specified (which is the default), the regular vacuum_cost_limit value will be used.
+
+Client Connection Defaults: Statement Behavior
+	client_min_messages 
+	search_path 
+	row_security:This variable controls whether to raise an error in lieu of applying a row security policy. When set to on, policies apply normally. 
+	default_tablespace 
+	temp_tablespaces 
+	check_function_bodies 
+	statement_timeout : A value of zero (the default) turns this off.
+	lock_timeout : A value of zero (the default) turns this off.
+Client Connection Defaults: Shared Library Preloading
+	local_preload_libraries: The parameter value only takes effect at the start of the connection. Subsequent changes have no effect. If a specified library is not  found, the connection  
+	                          attempt will fail.
+	session_preload_libraries: This variable specifies one or more shared libraries that are to be preloaded at connection start. Only superusers can change this setting. The parameter value   
+	                            only takes effect at the start of the connection. Subsequent changes have no effect. If a specified library is not found, the connection attempt will fail.
+	shared_preload_libraries: This variable specifies one or more shared libraries to be preloaded at server start. This parameter can only be set at server start. If a specified library is  
+	                          not found, the server will fail to start.
+Client Connection Defaults: Other Defaults	
+	dynamic_library_path: If a dynamically loadable module needs to be opened and the file name specified in the CREATE FUNCTION or LOAD command does not have a directory component (i.e.,the name does not contain a slash), the system will search this path for the required file.
+Lock Management: 
+	deadlock_timeout 
+	max_locks_per_transaction 
+Error Handling:
+	exit_on_error: If true, any error will terminate the current session. By default, this is set to false, so that only FATAL errors will terminate the session.
+	restart_after_crash: When set to true, which is the default, PostgreSQL will automatically reinitialize after a backend crash.
+Preset Options:
+	block_size 
+	wal_block_size 
+	wal_segment_size 
+	segment_size: Reports the number of blocks (pages) that can be stored within a file segment. It is determined by the value of RELSEG_SIZE when building the server. The maximum size of a segment file in bytes is equal to segment_size multiplied by block_size; by default this is 1GB.
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+ 
