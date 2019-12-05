@@ -1,0 +1,55 @@
+Environment : sandbox2_order_manager_v5Environment
+
+select status,site from orders;
+
+DROP FUNCTION all_schema_query(text);
+
+============================================================================================================================
+CREATE OR REPLACE FUNCTION all_schema_query(sql_text text) RETURNS void AS $$
+DECLARE
+  schema text;
+  result1 RECORD;
+BEGIN
+  FOR schema IN SELECT schema_name FROM information_schema.schemata WHERE schema_name not in ('public','pg_catalog','pg_toast','information_schema')  
+  LOOP
+	  EXECUTE 'set schema '||''''||schema||'''' ;
+	  EXECUTE sql_text 	into result1 ;
+	 RAISE NOTICE 'Schema:% : Result >:  %', schema,result1;
+  END LOOP;
+END
+$$ LANGUAGE plpgsql;
+
+-------
+psql > select all_schema_query('select status,site from orders') ;
+
+---------------
+CREATE OR REPLACE FUNCTION all_schema_query(sql_text text) RETURNS TABLE(name text, status integer,site character varying) AS $$
+DECLARE
+  schema text;
+BEGIN
+  FOR schema IN SELECT schema_name FROM information_schema.schemata WHERE schema_name not in ('public','pg_catalog','pg_toast','information_schema')
+  LOOP
+   	  EXECUTE 'set schema '||''''||schema||'''' ;
+	  RETURN QUERY
+      EXECUTE sql_text  ;	
+  END LOOP;
+END
+$$ LANGUAGE plpgsql;
+
+-------
+psql >  select all_schema_query('select current_schema::text, status,site from orders') ;
+
+
+------------------- Prepare dynamic script for each schema.
+\pset tuples_only
+ \o /tmp/1.txt
+select 'select '||''''||nspname||''''||' as source_schema , status,site from '||nspname||'.orders ; ' as Query from pg_catalog.pg_namespace where nspname not in ('public','pg_catalog','pg_toast','information_schema')  ;
+\q
+
+ psql -U deploy order_manager -f /tmp/1.txt
+
+
+
+
+
+
