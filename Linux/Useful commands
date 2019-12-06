@@ -1,0 +1,15 @@
+Processes consuming high SWAP -
+---------------------------------------------------
+ for file in /proc/*/status ; do  grep  VmSwap $file /dev/null |grep -v '0 kB'  ;done  2>/dev/null |sort  -k 2n
+ 
+
+Format top command output to include/remove/sort column -
+--------------------------------------------------- 
+
+	Type f to open the "Add column" menu
+	Use the up/down arrow keys to navigate to SWAP
+	Type d or <Space> to select SWAP for display
+	Tap the right arrow to select the SWAP column to reorder
+	Type s to select SWAP as your sort column
+	Type q to return to the main screen
+	You can save the current top configuration by typing Shift + W.
