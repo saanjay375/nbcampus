@@ -8,10 +8,11 @@ effective_io_concurrency = 8
 max_parallel_workers_per_gather = 4
 backend_flush_after = 512kB
 
+shared_preload_libraries = 'pg_stat_statements'
 pg_stat_statements.max = 10000
 pg_stat_statements.track = all
 track_io_timing = on
-shared_preload_libraries = 'pg_stat_statements'
+
 
 
 grep -i -n default_statistics_target *|grep -v ':#'
@@ -90,3 +91,33 @@ current value : 0
 Recommended value : 512Kb.
 
 4. Enable log_statement_stats and track_io_timing
+
+======================================================================================================
+https://support.cloud.engineyard.com/hc/en-us/requests/158824
+
+1. run echo 3 > /proc/sys/vm/drop_caches and see if that will release the swap. Dropping caches will produce disk IOPS but this should not hurt as long as it is kicked off in a silent moment of the database.
+
+echo 3 > /proc/sys/vm/drop_caches
+
+2. run swapoff and swapon additionally, so the swap is forced to return back to the OS
+
+swapoff
+swapon
+
+3. set vm.swappiness to a lower setting i.e 5. The actual value is 15. Hopefully, that prevents swapping activity.
+echo 5 > /proc/sys/vm/swappiness
+======================================================================================================
+
+vacuum full  styletread.items  ;
+vacuum full  brandcollective.items  ;
+vacuum full  brandcollective.versions  ;
+vacuum full  rag.items ;
+vacuum full  seafollypim.scheduled_items ;
+vacuum full  brandcollective.channel_items ;
+vacuum full  rag.scheduled_items ;
+vacuum full  apg.items ;
+vacuum full  seed.scheduled_items ;
+vacuum full  twoxu.items ;
+======================================================================================================
+
+

@@ -1,4 +1,4 @@
-Environment : sandbox2_order_manager_v5
+Environment : sandbox2_order_manager_v5 order_manager
 
 select status,site from orders;
 
