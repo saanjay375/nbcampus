@@ -1,5 +1,10 @@
 ---------------------------------********* New Topic ---------------------------------------
+
 Monitor --
+
+--* Channel Manager database - incoming connections, grouped by application name
+ select count(*),regexp_replace(application_name,' .*','') from pg_catalog.pg_stat_activity group by regexp_replace(application_name,' .*','')  ;
+ 
 --* show running queries (pre 9.2)
 SELECT procpid, age(clock_timestamp(), query_start), usename, current_query 
 FROM pg_stat_activity 
@@ -38,6 +43,23 @@ select * from pg_stat_activity where current_query not like '<%';
 
 SELECT * FROM pg_extension
 
+--* List all triggers available on table e.g. t1
+
+select event_object_schema as table_schema,
+       event_object_table as table_name,
+       trigger_schema,
+       trigger_name,
+       string_agg(event_manipulation, ',') as event,
+       action_timing as activation,
+       action_condition as condition,
+       action_statement as definition
+from information_schema.triggers
+where event_object_table ='t1'         --table name
+group by 1,2,3,4,6,7,8
+order by table_schema,
+         table_name;
+		 
+		 
 --* all databases and their sizes
 SELECT pg_database.datname as "database_name", pg_database_size(pg_database.datname)/1024/1024 AS size_in_mb FROM pg_database ORDER by size_in_mb DESC;
 

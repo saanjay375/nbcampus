@@ -1,0 +1,44 @@
+Environment: Environment : sandbox2_order_manager_v5 postgres
+-------------------------------------------------------------
+
+
+drop table t1 ;
+create table t1 (id numeric, name varchar(20), vc bigint default 0 ); -- column vc should not be null else function before_update_func_t1 will return null i.e. trigger will not be executed.
+
+--------------------------------------------------
+drop function before_update_func_t1() ;
+CREATE OR REPLACE FUNCTION before_update_func_t1()
+  RETURNS trigger AS
+$$
+BEGIN
+         NEW.vc := OLD.vc +1 ;
+    RETURN NEW;
+END;
+$$
+LANGUAGE 'plpgsql';
+--------------------------------------------------
+drop trigger before_update_trg_t1 on t1 ;
+
+CREATE TRIGGER before_update_trg_t1 before update of id, name
+    ON t1
+    FOR EACH ROW EXECUTE PROCEDURE before_update_func_t1() ;
+	
+	
+--------------------------------------------------
+drop trigger after_update_trg_t1 on t1 ;
+
+CREATE TRIGGER after_update_trg_t1 After update of id, name
+    ON t1
+    FOR EACH ROW EXECUTE PROCEDURE after_update_func_t1() ;
+
+--------------------------------------------------
+CREATE OR REPLACE FUNCTION after_update_func_t1()
+  RETURNS trigger AS
+$$
+BEGIN
+         update t1 set vc = vc +1   ;
+    RETURN Null;
+END;
+$$
+LANGUAGE 'plpgsql';
+--------------------------------------------------
