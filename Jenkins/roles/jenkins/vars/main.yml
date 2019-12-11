@@ -1,3 +1,0 @@
----
-jenkins_plugins: ['script-security', 'command-launcher','configuration-as-code','configuration-as-code-support']
-jenkins_admin_user_pass: "jenkins12"
