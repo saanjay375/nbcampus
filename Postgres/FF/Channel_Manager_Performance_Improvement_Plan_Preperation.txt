@@ -90,7 +90,7 @@ backend_flush_after
 current value : 0
 Recommended value : 512Kb.
 
-4. Enable log_statement_stats and track_io_timing
+4. Enable log_statement_stats and track_io_timing M0rningn!
 
 ======================================================================================================
 https://support.cloud.engineyard.com/hc/en-us/requests/158824
@@ -119,5 +119,12 @@ vacuum full  apg.items ;
 vacuum full  seed.scheduled_items ;
 vacuum full  twoxu.items ;
 ======================================================================================================
+as root execute below to staus/start/stop postgres
+service postgresql-9.6 status
+service postgresql-9.6 stop
+service postgresql-9.6 start
 
-
+or as root execute below to staus/start/stop postgres 
+/etc/init.d/postgresql-9.6 status
+/etc/init.d/postgresql-9.6 stop
+/etc/init.d/postgresql-9.6 start 

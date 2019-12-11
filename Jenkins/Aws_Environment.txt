@@ -1,0 +1,4 @@
+github nj3110@gmail.com Target@0
+AWS Environment:
+Public DNS : ec2-13-238-155-222.ap-southeast-2.compute.amazonaws.com
+Public IP : 13.238.155.222
