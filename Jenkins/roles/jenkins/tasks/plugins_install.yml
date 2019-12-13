@@ -1,0 +1,17 @@
+---
+- name: install plugin
+  jenkins_plugin:
+    name: "{{ item }}"
+    state: latest
+    url_username: admin
+    url_password: "{{ adminpwd }}"
+  register: install_plugin_result
+  retries: 5
+  delay: 1
+  until: install_plugin_result is not failed
+  with_items: "{{ jenkins_plugins }}"
+
+- name: Restart Jenkin Service After Plugin Installation
+  service:
+    name: jenkins
+    state: restarted  

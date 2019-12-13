@@ -1,0 +1,8 @@
+---
+- name: "Copy file jenkins_job.py (Bug Fixed python3 #54958) to destination"
+  copy:
+    src: "jenkins_job.py"
+    dest: "/root/.local/lib/python3.6/site-packages/ansible/modules/web_infrastructure/jenkins_job.py"
+    owner: root
+    group: root
+    mode: '0644'

@@ -1,9 +1,0 @@
----
-
-- name: install plugin
-  jenkins_plugin:
-    name: "{{ item }}"
-    state: latest
-    url_username: admin
-    url_password: "{{ adminpwd }}"
-  with_items: "{{ jenkins_plugins }}"

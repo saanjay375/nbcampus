@@ -1,0 +1,17 @@
+---
+- name: init password jenkin
+  shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+  changed_when: false
+  register: jenkin_admin_pwd_result
+
+- name: save default admin password for further use
+  set_fact:
+    adminpwd: "{{jenkin_admin_pwd_result.stdout}}"
+
+- name: uninstall extra plugin
+  jenkins_plugin:
+    name: "{{ item }}"
+    state: absent
+    url_username: admin
+    url_password: "{{ adminpwd }}"
+  with_items: "{{ remove_jenkins_plugins }}"

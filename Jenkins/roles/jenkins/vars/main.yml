@@ -1,3 +1,4 @@
 ---
-jenkins_plugins: ['script-security', 'command-launcher','configuration-as-code','configuration-as-code-support','Git']
+jenkins_plugins: ['script-security', 'command-launcher','configuration-as-code','configuration-as-code-support','github','workflow-aggregator','dashboard-view','build-pipeline-plugin',test-results-analyzer','blueocean']
 jenkins_admin_user_pass: "jenkins12"
+remove_jenkins_plugins: []

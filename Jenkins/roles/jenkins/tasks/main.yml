@@ -1,11 +1,15 @@
 ---
-- name: Intall Jenkins Server
+- name: Prepare Server Environment 
+  include_tasks: prepare_env.yml
+
+- name: Install Jenkins Server
   include_tasks: jenkins_install.yml
 
 - name: unlock and add admin user and complete setup Wizard
   include_tasks: unlock_admin_complete_setup.yml
 
-- name: Install reqested plugins
-  include_tasks: install_plugins.yml
+- name: Install Required Plugins
+  include_tasks: plugins_install.yml
 
-
+- name: Add SCM SEED Job
+  include_tasks: add_scm_seed_job.yml

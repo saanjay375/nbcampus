@@ -1,4 +1,46 @@
 github nj3110@gmail.com Target@0
 AWS Environment:
-Public DNS : ec2-13-238-155-222.ap-southeast-2.compute.amazonaws.com
-Public IP : 13.238.155.222
+Public DNS : ec2-13-236-119-88.ap-southeast-2.compute.amazonaws.com
+Public IP : 13.236.119.88
+
+-----------
+13.211.49.83
+ec2-13-211-49-83.ap-southeast-2.compute.amazonaws.com
+--------
+
+mkdir /ansible ; chmod 777 /ansible
+dnf update -y
+yum install gcc -y
+dnf install python3-pip -y
+yum install python36-devel -y
+yum install git -y
+subscription-manager repos --enable ansible-2.8-for-rhel-8-x86_64-rpms
+pip3 install ansible --user
+pip3 install psutil
+pip install python-jenkins
+pip3 install lxml
+
+
+mkdir /ansible ; chmod 777 /ansible
+cd /usr/bin
+ln -s /root/.local/bin/ansible ansible
+ln -s /root/.local/bin/ansible-playbook  ansible-playbook
+
+dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+dnf install --nobest docker-ce
+
+----------------------------------------------------------------
+jenkins_directory: /var/lib/jenkins
+jenkins_job_owner: jenkins
+jenkins_job_group: jenkins
+
+
+
+
+
+---------------------------------------
+cleanup
+yum -y remove jenkins
+rm -fR /var/log/jenkins /var/cache/jenkins /var/lib/jenkins 
+
+
