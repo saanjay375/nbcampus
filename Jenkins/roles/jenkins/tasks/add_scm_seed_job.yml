@@ -1,7 +1,7 @@
 ---
 - name: Add jenkins Seed Job
   jenkins_job:
-    config: "{{ lookup('file', '/ansible/tmp/config.xml') }}"
+    config: "{{ lookup('file', 'scm_seed_job_config.xml') }}"
     name: Test_Job_XML
     password: jenkins12
     url: http://localhost:8080

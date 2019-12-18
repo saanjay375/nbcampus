@@ -1,0 +1,6 @@
+---
+- name: Ansible copy file force
+  copy:
+    src: config.xml
+    dest: "{{JENKINS_HOME}}/config.xml"
+    force: yes
