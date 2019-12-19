@@ -103,7 +103,6 @@ ORDER BY
     ELSE NULL 
   END;
   
-  
 --* Table Size (as in disk space)
 SELECT nspname || '.' || relname AS "relation",
    pg_size_pretty(pg_total_relation_size(C.oid)) AS "total_size"
