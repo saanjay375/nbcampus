@@ -1,0 +1,7 @@
+---
+- name: Call create_custom_job.yml for each jenkins-job
+  include_tasks: create_custom_job.yml
+  with_items: "{{jenkins_job}}"
+  loop_control:
+    loop_var: jenkins_job_var
+

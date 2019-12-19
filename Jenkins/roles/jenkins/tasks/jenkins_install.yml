@@ -21,7 +21,7 @@
 
 - name: install jenkins
   dnf:
-    name: jenkins
+    name: jenkins-2.19*
     state: present
 
 - name: start jenkins

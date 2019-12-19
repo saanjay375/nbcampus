@@ -11,5 +11,5 @@
 - name: Install Required Plugins
   include_tasks: plugins_install.yml
 
-- name: Add SCM SEED Job
-  include_tasks: add_scm_seed_job.yml
+- name: Create User Defined Jobs
+  include_tasks: create_custom_job_outer_loop.yml

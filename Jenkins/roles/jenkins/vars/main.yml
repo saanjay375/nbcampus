@@ -1,5 +1,18 @@
 ---
-jenkins_plugins: ['script-security', 'command-launcher','configuration-as-code','configuration-as-code-support','github','github-oauth','workflow-aggregator','dashboard-view','build-pipeline-plugin',test-results-analyzer','blueocean']
+#jenkins_plugins: ['script-security', 'command-launcher','configuration-as-code','configuration-as-code-support','github','github-oauth','workflow-aggregator','dashboard-view','build-pipeline-plugin',test-results-analyzer','blueocean']
+jenkins_plugins: ['github','workflow-aggregator','dashboard-view','build-pipeline-plugin',test-results-analyzer','blueocean']
 jenkins_admin_user_pass: "jenkins12"
-remove_jenkins_plugins: []
-JENKINS_HOME: /var/lib/jenkins
+remove_jenkins_plugins: ['script-security','command-launcher']
+
+jenkins_job:
+  - name: github_nj3110
+    repo: https://github.com/nj3110/nbcampus
+    branch: pycode
+  - name: job1
+    repo: repo1
+    branch: branch1
+  - name: job2
+    repo: repo2
+    branch: branch2
+
+    
