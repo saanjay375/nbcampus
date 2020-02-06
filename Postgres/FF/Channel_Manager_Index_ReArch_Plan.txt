@@ -1,0 +1,329 @@
+ schema_name |   table_name    |                           index_name                            |                column_names
+-------------+-----------------+-----------------------------------------------------------------+--------------------------------------------
+ twoxu       | scheduled_items | index_scheduled_items_on_channel_id                             | channel_id
+ twoxu       | scheduled_items | index_scheduled_items_on_channel_item_id                        | channel_item_id
+ twoxu       | scheduled_items | index_scheduled_items_on_external_code                          | external_code
+ twoxu       | scheduled_items | index_scheduled_items_on_item_version_id                        | item_version_id
+ twoxu       | scheduled_items | index_scheduled_items_on_order_id                               | order_id
+ twoxu       | scheduled_items | index_scheduled_items_on_shipment_id                            | shipment_id
+																								 | scheduled_batch_id
+																								 |	action
+																								 |	status		
+																								 |	scheduled_type
+																								 |	updated_at
+ twoxu       | scheduled_items | scheduled_items_pkey                                            | id
+ twoxu       | scheduled_items | index_scheduled_batch_id_external_code                          | scheduled_batch_id, external_code X
+ twoxu       | scheduled_items | sch_itm_status_action_id_idx                                    | action, id, status X
+ twoxu       | scheduled_items | scheduled_items_channel_id_status_scheduled_type_action_idx     | scheduled_type, channel_id, action, status X
+ twoxu       | scheduled_items | scheduled_items_channel_id_status_updated_at_without_unique_idx | updated_at, status, channel_id X
+ twoxu       | scheduled_items | scheduled_items_channel_id_updated_at_idx                       | updated_at, channel_id X
+ twoxu       | scheduled_items | scheduled_items_id_scheduled_batch_id_idx                       | scheduled_batch_id, id X
+(13 rows)
+
+
+CREATE INDEX scheduled_items_scheduled_batch_id_idx ON twoxu.scheduled_items USING btree (scheduled_batch_id);
+CREATE INDEX scheduled_items_updated_at_idx ON twoxu.scheduled_items USING btree (updated_at);
+CREATE INDEX scheduled_items_action_idx ON twoxu.scheduled_items USING btree (action);
+CREATE INDEX scheduled_items_status_idx ON twoxu.scheduled_items USING btree (status);
+CREATE INDEX scheduled_items_scheduled_type_idx ON twoxu.scheduled_items USING btree (scheduled_type);
+
+
+Unused Indexes
+ rolname | schemaname |    tablename    |                indexname                 | index_size
+---------+------------+-----------------+------------------------------------------+------------
+ deploy  | twoxu      | scheduled_items | index_scheduled_items_on_item_version_id | 867 MB
+ deploy  | twoxu      | scheduled_items | index_scheduled_items_on_order_id        | 736 MB
+ deploy  | twoxu      | scheduled_items | index_scheduled_items_on_shipment_id     | 734 MB
+ deploy  | twoxu      | scheduled_items | index_scheduled_items_on_external_code   | 718 MB
+(4 rows)
+
+
+-----------------
+Testing in Staging database.
+Sample queries
+-. scheduled_items_id_scheduled_batch_id_idx                       | scheduled_batch_id, id 
+
+explain analyze select scheduled_batch_id, id from twoxu.scheduled_items where scheduled_batch_id=4 and id=2279 ;
+                                                                           QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using scheduled_items_id_scheduled_batch_id_idx on scheduled_items  (cost=0.43..3.47 rows=1 width=8) (actual time=0.511..0.511 rows=0 loops=1)
+   Index Cond: ((scheduled_batch_id = 4) AND (id = 2279))
+   Heap Fetches: 0
+ Planning time: 2.354 ms
+ Execution time: 0.535 ms
+(5 rows)
+
+                                                              QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using scheduled_items_pkey on scheduled_items  (cost=0.43..3.45 rows=1 width=8) (actual time=1.534..1.535 rows=1 loops=1)
+   Index Cond: (id = 2279)
+   Filter: (scheduled_batch_id = 4)
+ Planning time: 1.259 ms
+ Execution time: 1.552 ms
+(5 rows)
+
+                                                              QUERY PLAN-- After New Index
+--------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using scheduled_items_pkey on scheduled_items  (cost=0.43..3.45 rows=1 width=8) (actual time=0.015..0.015 rows=1 loops=1)
+   Index Cond: (id = 2279)
+   Filter: (scheduled_batch_id = 4)
+ Planning time: 0.099 ms
+ Execution time: 0.030 ms
+(5 rows)
+
+
+-. scheduled_items_channel_id_updated_at_idx                       | updated_at, channel_id
+ explain analyze select updated_at , channel_id, action, status from twoxu.scheduled_items where updated_at='2018-07-19 20:12:20.991944' and channel_id=10 ;
+                                                                         QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using scheduled_items_channel_id_updated_at_idx on scheduled_items  (cost=0.56..3.58 rows=1 width=29) (actual time=1.136..1.516 rows=2 loops=1)
+   Index Cond: ((channel_id = 10) AND (updated_at = '2018-07-19 20:12:20.991944'::timestamp without time zone))
+ Planning time: 0.602 ms
+ Execution time: 1.538 ms
+(4 rows)
+
+                                                                   QUERY PLAN-- After New Index
+-------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using scheduled_items_updated_at_idx on scheduled_items  (cost=0.43..3.45 rows=1 width=29) (actual time=1.804..2.199 rows=2 loops=1)
+   Index Cond: (updated_at = '2018-07-19 20:12:20.991944'::timestamp without time zone)
+   Filter: (channel_id = 10)
+ Planning time: 0.607 ms
+ Execution time: 2.234 ms
+(5 rows)
+
+
+
+-.  scheduled_items_channel_id_status_scheduled_type_action_idx :: scheduled_type, channel_id, action, status
+explain analyze select scheduled_type, channel_id, action, status from twoxu.scheduled_items where scheduled_type='product' and channel_id=2 and action='create'  and status=3 ;
+                                                                                     QUERY PLAN
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using scheduled_items_channel_id_status_scheduled_type_action_idx on scheduled_items  (cost=0.56..3.58 rows=1 width=28) (actual time=1.146..1.744 rows=436 loops=1)
+   Index Cond: ((channel_id = 2) AND (status = 3) AND (scheduled_type = 'product'::text) AND (action = 'create'::text))
+   Heap Fetches: 0
+ Planning time: 0.142 ms
+ Execution time: 1.787 ms
+(5 rows)
+
+                                                                        QUERY PLAN-- After New Index
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on scheduled_items  (cost=543.65..682.98 rows=1 width=28) (actual time=5.940..20.199 rows=436 loops=1)
+   Recheck Cond: (((action)::text = 'create'::text) AND ((scheduled_type)::text = 'product'::text))
+   Filter: ((channel_id = 2) AND (status = 3))
+   Rows Removed by Filter: 19609
+   Heap Blocks: exact=6157
+   ->  BitmapAnd  (cost=543.65..543.65 rows=92 width=0) (actual time=4.998..4.998 rows=0 loops=1)
+         ->  Bitmap Index Scan on scheduled_items_action_idx  (cost=0.00..269.16 rows=20030 width=0) (actual time=2.033..2.033 rows=20045 loops=1)
+               Index Cond: ((action)::text = 'create'::text)
+         ->  Bitmap Index Scan on scheduled_items_scheduled_type_idx  (cost=0.00..274.24 rows=22708 width=0) (actual time=2.384..2.384 rows=22639 loops=1)
+               Index Cond: ((scheduled_type)::text = 'product'::text)
+ Planning time: 0.106 ms
+ Execution time: 20.249 ms
+(12 rows)
+
+
+-. sch_itm_status_action_id_idx :: action, id, status
+ explain analyze select action,status,id from  twoxu.scheduled_items where action='create' and id>2267 and status=3 ;
+                                                                         QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Only Scan using sch_itm_status_action_id_idx on scheduled_items  (cost=0.56..970.22 rows=13554 width=21) (actual time=1.358..3.009 rows=435 loops=1)
+   Index Cond: ((status = 3) AND (action = 'create'::text) AND (id > 2267))
+   Heap Fetches: 0
+ Planning time: 0.613 ms
+ Execution time: 3.047 ms
+(5 rows)
+
+                                                                       QUERY PLAN-- After New Index
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using scheduled_items_action_idx on scheduled_items  (cost=0.43..26764.91 rows=13799 width=21) (actual time=0.030..13.505 rows=435 loops=1)
+   Index Cond: ((action)::text = 'create'::text)
+   Filter: ((id > 2267) AND (status = 3))
+   Rows Removed by Filter: 19610
+ Planning time: 0.733 ms
+ Execution time: 13.546 ms
+(6 rows)
+
+
+-. index_scheduled_batch_id_external_code :: scheduled_batch_id, external_code
+explain analyze select channel_id , scheduled_batch_id,external_code from twoxu.scheduled_items where scheduled_batch_id=3638  and external_code='UQ1862k-BLK_BLK-OSFA-cto' ;
+                                                                       QUERY PLAN
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using index_scheduled_batch_id_external_code on scheduled_items  (cost=0.56..3.58 rows=1 width=27) (actual time=1.351..1.352 rows=1 loops=1)
+   Index Cond: ((scheduled_batch_id = 3638) AND ((external_code)::text = 'UQ1862k-BLK_BLK-OSFA-cto'::text))
+ Planning time: 1.726 ms
+ Execution time: 1.364 ms
+(4 rows)
+
+                                                                      QUERY PLAN-- After New Index
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on scheduled_items  (cost=4.56..6.08 rows=1 width=27) (actual time=3.408..3.408 rows=1 loops=1)
+   Recheck Cond: (((external_code)::text = 'UQ1862k-BLK_BLK-OSFA-cto'::text) AND (scheduled_batch_id = 3638))
+   Heap Blocks: exact=1
+   ->  BitmapAnd  (cost=4.56..4.56 rows=1 width=0) (actual time=2.610..2.610 rows=0 loops=1)
+         ->  Bitmap Index Scan on index_scheduled_items_on_external_code  (cost=0.00..2.10 rows=5 width=0) (actual time=1.641..1.641 rows=4 loops=1)
+               Index Cond: ((external_code)::text = 'UQ1862k-BLK_BLK-OSFA-cto'::text)
+         ->  Bitmap Index Scan on scheduled_items_scheduled_batch_id_idx  (cost=0.00..2.22 rows=38 width=0) (actual time=0.968..0.968 rows=1 loops=1)
+               Index Cond: (scheduled_batch_id = 3638)
+ Planning time: 1.459 ms
+ Execution time: 3.434 ms
+(10 rows)
+
+-. scheduled_items_channel_id_status_updated_at_without_unique_idx | updated_at, status, channel_id  
+explain analyze select updated_at , channel_id, action, status from twoxu.scheduled_items where updated_at='2018-07-19 20:12:20.991944' and status=1  and channel_id=10 ;
+
+                                                                         QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using scheduled_items_channel_id_updated_at_idx on scheduled_items  (cost=0.56..3.58 rows=1 width=29) (actual time=0.015..0.017 rows=2 loops=1)
+   Index Cond: ((channel_id = 10) AND (updated_at = '2018-07-19 20:12:20.991944'::timestamp without time zone))
+   Filter: (status = 1)
+ Planning time: 0.092 ms
+ Execution time: 0.030 ms
+(5 rows)
+
+                                                                   QUERY PLAN-- After New Index
+-------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using scheduled_items_updated_at_idx on scheduled_items  (cost=0.43..5.67 rows=1 width=29) (actual time=0.011..0.014 rows=2 loops=1)
+   Index Cond: (updated_at = '2018-07-19 20:12:20.991944'::timestamp without time zone)
+   Filter: ((status = 1) AND (channel_id = 10))
+ Planning time: 0.385 ms
+ Execution time: 0.032 ms
+(5 rows)
+
+
+
+--------------------------------------------------------------------------
+ schema_name |  table_name   |                        index_name                        |             column_names
+-------------+---------------+----------------------------------------------------------+--------------------------------------
+ twoxu       | channel_items | index_channel_items_on_item_id                           | item_id
+ twoxu       | channel_items | index_channel_items_on_version_id                        | version_id	
+ twoxu       | channel_items | channel_items_pkey                                       | id
+																						| channel_id
+																						| export_status
+																						| sku
+																						| status
+																						| item_type
+																						| updated_at
+																						| code
+																						| external_code
+ twoxu       | channel_items | channel_items_channel_id_export_status_idx               | channel_id, export_status X
+ twoxu       | channel_items | channel_items_channel_id_sku_idx                         | channel_id, sku X
+ twoxu       | channel_items | channel_items_channel_id_status_idx                      | channel_id, status X
+ twoxu       | channel_items | channel_items_channel_id_status_item_type_id             | channel_id, status, id, item_type X
+ twoxu       | channel_items | channel_items_channel_id_updated_at_idx                  | updated_at, channel_id X
+ twoxu       | channel_items | channel_items_code_key_varchar_index                     | channel_id, code X
+ twoxu       | channel_items | channel_items_external_code_item_id_idx                  | external_code, item_id X
+ twoxu       | channel_items | channel_items_external_code_key_varchar_index            | external_code, channel_id X
+ twoxu       | channel_items | channel_items_type_external_code_key_index               | item_type, external_code, channel_id X
+ twoxu       | channel_items | ci_channel_status_item_type                              | item_type, status, channel_id, id X
+ twoxu       | channel_items | index_channel_items_on_channel_id_and_item_type_and_code | code, item_type, channel_id X
+(14 rows)
+
+--------------------------------------------------------------------------
+         schema_name |  table_name   |                        index_name                        |             column_names
+-------------+---------------+----------------------------------------------------------+--------------------------------------
+ styletread  | channel_items | index_channel_items_on_item_id                           | item_id
+ styletread  | channel_items | index_channel_items_on_version_id                        | version_id
+ styletread  | channel_items | channel_items_pkey                                       | id
+																						| export_status
+																						| channel_id
+																						| sku
+																						| status
+																						| item_type
+																						| updated_at
+																						| code
+																						| external_code
+ styletread  | channel_items | channel_items_channel_id_export_status_idx               | export_status, channel_id X
+ styletread  | channel_items | channel_items_channel_id_sku_idx                         | channel_id, sku X
+ styletread  | channel_items | channel_items_channel_id_status_idx                      | status, channel_id X
+ styletread  | channel_items | channel_items_channel_id_status_item_type_id             | status, id, item_type, channel_id X
+ styletread  | channel_items | channel_items_channel_id_updated_at_idx                  | channel_id, updated_at X
+ styletread  | channel_items | channel_items_code_key_varchar_index                     | channel_id, code X
+ styletread  | channel_items | channel_items_external_code_item_id_idx                  | external_code, item_id X
+ styletread  | channel_items | channel_items_external_code_key_varchar_index            | external_code, channel_id X
+ styletread  | channel_items | channel_items_type_external_code_key_index               | external_code, channel_id, item_type X
+ styletread  | channel_items | index_channel_items_on_channel_id_and_item_type_and_code | item_type, channel_id, code
+
+(13 rows)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------- staging table details.
+\d twoxu.scheduled_items
+                                             Table "twoxu.scheduled_items"
+       Column       |            Type             |                             Modifiers
+--------------------+-----------------------------+--------------------------------------------------------------------
+ id                 | integer                     | not null default nextval('twoxu.scheduled_items_id_seq'::regclass)
+ scheduled_batch_id | integer                     |
+ item_version_id    | integer                     |
+ status             | integer                     | default 0
+ action             | character varying           |
+ created_at         | timestamp without time zone | not null
+ updated_at         | timestamp without time zone | not null
+ channel_id         | integer                     |
+ scheduled_type     | character varying           |
+ data               | json                        |
+ transmitted_at     | timestamp without time zone |
+ channel_item_id    | integer                     |
+ external_code      | character varying           |
+ force_transmit     | boolean                     | default false
+ order_id           | integer                     |
+ shipment_id        | integer                     |
+ message            | text                        |
+ scope              | character varying           |
+ control_reference  | integer                     |
+Indexes:
+    "scheduled_items_pkey" PRIMARY KEY, btree (id)
+    "index_scheduled_batch_id_external_code" btree (scheduled_batch_id, external_code)
+    "index_scheduled_items_on_channel_id" btree (channel_id)
+    "index_scheduled_items_on_channel_item_id" btree (channel_item_id)
+    "index_scheduled_items_on_external_code" btree (external_code)
+    "index_scheduled_items_on_item_version_id" btree (item_version_id)
+    "index_scheduled_items_on_order_id" btree (order_id)
+    "index_scheduled_items_on_shipment_id" btree (shipment_id)
+    "sch_itm_status_action_id_idx" btree (status, action, id)
+    "scheduled_items_channel_id_status_scheduled_type_action_idx" btree (channel_id, status, scheduled_type, action)
+    "scheduled_items_channel_id_updated_at_idx" btree (channel_id, updated_at)
+    "scheduled_items_id_scheduled_batch_id_idx" btree (scheduled_batch_id, id)
+Foreign-key constraints:
+    "fk_rails_13ee284a21" FOREIGN KEY (order_id) REFERENCES twoxu.orders(id)
+    "fk_rails_2604055ecb" FOREIGN KEY (scheduled_batch_id) REFERENCES twoxu.scheduled_batches(id)
+    "fk_rails_6d7494698e" FOREIGN KEY (shipment_id) REFERENCES twoxu.shipments(id)
+    "fk_rails_8ae51244b1" FOREIGN KEY (channel_id) REFERENCES twoxu.channels(id)
+    "fk_rails_a5fc3aefb5" FOREIGN KEY (channel_item_id) REFERENCES twoxu.channel_items(id)
+
+
+
+SELECT r.rolname, s.schemaname,
+       s.relname AS tablename,
+       s.indexrelname AS indexname,
+       pg_size_pretty(pg_relation_size(s.indexrelid)) AS index_size
+FROM pg_catalog.pg_stat_all_indexes s
+   JOIN pg_catalog.pg_index i ON s.indexrelid = i.indexrelid
+   Join pg_catalog.pg_class c on i.indexrelid  = c.oid
+   join pg_catalog.pg_roles r  on r.oid = c.relowner
+WHERE s.schemaname='twoxu' and s.relname='scheduled_items' AND
+   s.idx_scan = 0      -- has never been scanned
+  AND 0 <>ALL (i.indkey)  -- no index column is an expression
+  AND NOT i.indisunique   -- is not a UNIQUE index
+  AND NOT EXISTS          -- does not enforce a constraint
+         (SELECT 1 FROM pg_catalog.pg_constraint c
+          WHERE c.conindid = s.indexrelid)
+ORDER BY pg_relation_size(s.indexrelid) DESC;

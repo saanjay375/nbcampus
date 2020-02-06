@@ -1,0 +1,385 @@
+EC2 -
+ip-172-31-45-203 Bucardo # tar -xvf Bucardo-5.5.0.tar
+ip-172-31-45-203 Bucardo # ls -ltr
+total 1404
+drwxr-xr-x 5  504   20    4096 Nov  5  2018 Bucardo-5.5.0
+-rw-r--r-- 1 root root 1433600 Feb  2 23:02 Bucardo-5.5.0.tar
+ip-172-31-45-203 Bucardo # cd Bucardo-5.5.0
+ip-172-31-45-203 Bucardo-5.5.0 # which perl
+/usr/bin/perl
+ip-172-31-45-203 Bucardo-5.5.0 # perl Makefile.PL
+Checking if your kit is complete...
+Looks good
+Warning: prerequisite DBIx::Safe 1.2.4 not found.
+Generating a Unix-style Makefile
+Writing Makefile for Bucardo
+Writing MYMETA.yml and MYMETA.json
+ip-172-31-45-203 Bucardo-5.5.0 # make
+cp bucardo.schema blib/share/bucardo.schema
+cp Bucardo.pm blib/lib/Bucardo.pm
+cp bucardo blib/script/bucardo
+/usr/bin/perl -MExtUtils::MY -e 'MY->fixin(shift)' -- blib/script/bucardo
+Manifying blib/man1/bucardo.1pm
+Manifying blib/man3/Bucardo.3pm
+ip-172-31-45-203 Bucardo-5.5.0 # make install
+Installing /usr/local/lib64/perl5/5.20.2/Bucardo.pm
+Installing /usr/local/man/man1/bucardo.1pm
+Installing /usr/local/man/man3/Bucardo.3pm
+Installing /usr/local/bin/bucardo
+Installing /usr/local/share/bucardo/bucardo.schema
+Appending installation info to /usr/local/lib64/perl5/5.20.2/x86_64-linux/perllocal.pod
+ip-172-31-45-203 Bucardo-5.5.0 # mkdir /var/run/bucardo
+ip-172-31-45-203 Bucardo-5.5.0 # mkdir /var/log/bucardo
+ip-172-31-45-203 Bucardo-5.5.0 # chown postgres:postgres /var/run/bucardo ;chown postgres:postgres /var/log/bucardo
+ip-172-31-45-203 Bucardo-5.5.0 # su - postgres
+postgres@ip-172-31-45-203 ~ $ psql -D order_manager
+psql: invalid option -- 'D'
+Try "psql --help" for more information.
+postgres@ip-172-31-45-203 ~ $ psql -d order_manager
+psql (9.6.3)
+Type "help" for help.
+
+order_manager=# CREATE USER bucardo SUPERUSER PASSWORD 'random_password';
+CREATE ROLE
+order_manager=# CREATE DATABASE bucardo;
+CREATE DATABASE
+order_manager=#
+order_manager=# GRANT ALL ON DATABASE bucardo TO bucardo;
+GRANT
+postgres@ip-172-31-45-203 ~ $ psql
+psql (9.6.3)
+Type "help" for help.
+
+postgres=# \l
+                                    List of databases
+     Name      |  Owner   | Encoding |   Collate   |    Ctype    |   Access privileges
+---------------+----------+----------+-------------+-------------+-----------------------
+ bucardo       | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =Tc/postgres         +
+               |          |          |             |             | postgres=CTc/postgres+
+               |          |          |             |             | bucardo=CTc/postgres
+ order_manager | deploy   | UTF8     | en_US.UTF-8 | en_US.UTF-8 |
+ postgres      | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 |
+ template0     | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+               |          |          |             |             | postgres=CTc/postgres
+ template1     | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+               |          |          |             |             | postgres=CTc/postgres
+(5 rows)
+
+
+postgres@ip-172-31-45-203 /db/postgresql/9.6/data $
+postgres@ip-172-31-45-203 /db/postgresql/9.6/data $ vi pg_hba.conf
+postgres@ip-172-31-45-203 /db/postgresql/9.6/data $
+postgres@ip-172-31-45-203 /db/postgresql/9.6/data $
+postgres@ip-172-31-45-203 /db/postgresql/9.6/data $ pg_ctl reload -D /db/postgresql/9.6/data
+postgres@ip-172-31-45-203 /db/postgresql/9.6/data $ psql -h 172.31.45.203 -p 5432  -d postgres -U bucardo
+Password for user bucardo:
+psql (9.6.3)
+SSL connection (protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384, bits: 256, compression: on)
+Type "help" for help.
+
+postgres=# \q
+
+ip-172-31-45-203 9.6 # vi /root/.pgpass
+sandbox2-channel-manager-v5.ckcyslxaphpu.ap-southeast-2.rds.amazonaws.com:*:*:postgres:Zaq12wsx
+sandbox2-channel-manager-v5.ckcyslxaphpu.ap-southeast-2.rds.amazonaws.com:*:*:bucardo:random_password
+ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com:*:*:bucardo:random_password
+*:*:*:*:mpZEFXNnqi
+
+
+ip-172-31-45-203 9.6 # bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com  install
+This will install the bucardo database into an existing Postgres cluster.
+Postgres must have been compiled with Perl support,
+and you must connect as a superuser
+
+Current connection settings:
+1. Host:           ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com
+2. Port:           5432
+3. User:           bucardo
+4. Database:       bucardo
+5. PID directory:  /var/run/bucardo
+Enter a number to change it, P to proceed, or Q to quit: P
+
+Attempting to create and populate the bucardo database and schema
+Database creation is complete
+
+Updated configuration setting "piddir"
+Installation is now complete.
+If you see errors or need help, please email bucardo-general@bucardo.org
+
+You may want to check over the configuration variables next, by running:
+bucardo show all
+Change any setting by using: bucardo set foo=bar
+
+postgres=#  create database commercedb; ## create test databse commercedb for bucardo testing.
+postgres=#  create schema tenant1 ;; ## create test schema tenant1 in  commercedb for bucardo testing.
+
+--- populate test data in test tables--
+postgres=# create table tenant1.t1 (id numeric primary key) ;
+CREATE TABLE
+postgres=# create table tenant1.t2 (id numeric primary key) ;
+CREATE TABLE
+postgres=#
+postgres=#
+postgres=# insert into tenant1.t1 values (1) ;
+INSERT 0 1
+postgres=# insert into tenant1.t1 values (2) ;
+INSERT 0 1
+postgres=# insert into tenant1.t1 values (3) ;
+INSERT 0 1
+postgres=# insert into tenant1.t1 values (4) ;
+INSERT 0 1
+postgres=# insert into tenant1.t1 values (5) ;
+INSERT 0 1
+postgres=# insert into tenant1.t2 values (1) ;
+INSERT 0 1
+postgres=# insert into tenant1.t2 values (2) ;
+INSERT 0 1
+postgres=# insert into tenant1.t2 values (3) ;
+INSERT 0 1
+postgres=# insert into tenant1.t2 values (4) ;
+
+pg_dump -U postgres -d commercedb --schema tenant1 --schema-only >commercedb_tenant1_ddl.txt 
+
+RDS:
+
+postgres=>
+postgres=>
+postgres=> \du
+                                                   List of roles
+    Role name    |                         Attributes                         |              Member of
+-----------------+------------------------------------------------------------+-------------------------------------
+ postgres        | Create role, Create DB                                    +| {rds_superuser}
+                 | Password valid until infinity                              |
+ rds_replication | Cannot login                                               | {}
+ rds_superuser   | Cannot login                                               | {rds_replication,pg_signal_backend}
+ rdsadmin        | Superuser, Create role, Create DB, Replication, Bypass RLS+| {}
+                 | Password valid until infinity                              |
+ rdsrepladmin    | No inheritance, Cannot login, Replication                  | {}
+
+postgres=> CREATE USER bucardo PASSWORD 'random_password';
+CREATE ROLE
+postgres=> CREATE DATABASE bucardo;
+CREATE DATABASE
+postgres=> GRANT ALL ON DATABASE bucardo TO bucardo;
+GRANT
+postgres=> grant rds_superuser to bucardo ;
+GRANT ROLE
+
+postgres => create database commercedb;
+postgres=> alter user bucardo with createdb ;
+postgres=> alter user bucardo with createrole ;
+postgres=> alter user bucardo with createdb ;
+postgres=>  grant all on database commercedb to bucardo ;                ### commercedb is the database to replicate
+postgres=> GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA tenant1 TO bucardo; ### tenant1 is the schema to replicate. if multiple schemas are there in database, you need to grant all on all schemas. You need to create these schemas in advance.
+postgres=>
+postgres=> GRANT USAGE ON SCHEMA tenant1 TO bucardo; ## To enable users to access the objects in the schema that they do not own, you must grant the USAGE privilege to the users on the schema as shown in the following statemen
+postgres=> GRANT CREATE ON SCHEMA tenant1 TO bucardo; ## To allow users to create objects in the schema that they do not own, you need to grant them the CREATE privilege on the schema.
+
+postgres=> \du
+                                                   List of roles
+    Role name    |                         Attributes                         |              Member of
+-----------------+------------------------------------------------------------+-------------------------------------
+ bucardo         |                                                            | {rds_superuser}
+ postgres        | Create role, Create DB                                    +| {rds_superuser}
+                 | Password valid until infinity                              |
+ rds_replication | Cannot login                                               | {}
+ rds_superuser   | Cannot login                                               | {rds_replication,pg_signal_backend}
+ rdsadmin        | Superuser, Create role, Create DB, Replication, Bypass RLS+| {}
+                 | Password valid until infinity                              |
+ rdsrepladmin    | No inheritance, Cannot login, Replication                  | {}
+
+postgres=>
+
+EC2 -
+
+-- schema level dump
+postgresql os user > pg_dump -U postgres -d commercedb --schema tenant1 --schema-only >commercedb_tenant1_ddl.txt 
+postgresql os user > psql  -h sandbox2-channel-manager-v5.ckcyslxaphpu.ap-southeast-2.rds.amazonaws.com  -p 5432  -d commercedb -U postgres -f commercedb_tenant1_ddl.txt ## import dump as postgres user 
+
+
+
+postgresql os user > bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo add db primary_ec2 db=commercedb user=bucardo pass=random_password host=ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com
+
+postgresql os user > bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo add db standby_rds db=commercedb user=bucardo pass=random_password host=sandbox2-channel-manager-v5.ckcyslxaphpu.ap-southeast-2.rds.amazonaws.com
+
+Add all tables -
+postgresql os user > bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo -d bucardo -p 5432  add all tables db=primary_ec2 relgroup=commercedb_relgroup
+
+Add all sequences -
+postgresql os user > bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo  -d bucardo -p 5432  add all sequences db=primary_ec2 relgroup=commercedb_relgroup
+
+create the dbgroup -
+postgresql os user > bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo -d bucardo -p 5432 add dbgroup commercedb_dbgroup primary_ec2:source standby_rds:target
+
+Create sync
+postgresql os user > bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo  -d bucardo -p 5432 add sync commercedb_sync dbgroup=commercedb_dbgroup relgroup=commercedb_relgroup conflict_strategy=bucardo_source onetimecopy=2 autokick=0 ## autokick=0 is one time sync, you can remove it to keep sync ongoing.
+
+
+Start the bucardo service
+as root > bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo -P random_password start
+
+Start Sync
+bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo kick commercedb_sync 0            ## to run the sync once
+
+Set auto-kick on any changes
+bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo update sync commercedb_sync autokick=1
+bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo reload config
+
+
+
+
+
+
+
+
+
+
+-----------------
+### Lock table in "ACCESS Exclusive ( no other session is allowed to access) mode"
+
+tb=# BEGIN WORK;
+BEGIN
+tb=# lock table schema.t1 in ACCESS EXCLUSIVE mode;
+LOCK TABLE
+tb=#
+
+
+=================================================================================================
+=================================================================================================
+Bucardo Cleanup
+=================================================================================================
+=================================================================================================
+stop auto-kick --
+bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo update sync tb_sync autokick=0
+bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo reload config
+
+stop bucardo process -
+ bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo -P random_password stop
+ 
+Remove Sync:
+ bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo remove sync tb_sync
+
+Remove dbgroup:
+bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo -d bucardo -p 5432 remove dbgroup tb_relgroup
+
+Remove all sequences :
+ bucardo -U bucardo -d bucardo -P 5432 remove all sequences db=main relgroup=tb_relgroup
+ 
+Remove all Tables : 
+bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo remove all tables db=main relgroup=tb_relgroup
+
+Remove database:
+bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo remove db main 
+bucardo -h ec2-54-79-71-39.ap-southeast-2.compute.amazonaws.com -U bucardo remove db bak1 
+
+============================================
+Debugging  --
+1. Query to find who have what privileges on table.
+
+ELECT table_schema, table_name, grantee, privilege_type
+FROM information_schema.role_table_grants
+WHERE table_schema ='tenant1' and table_name='t1' ;
+
+
+2. Query to find tables without primary Key
+
+select tab.table_schema,
+       tab.table_name
+from information_schema.tables tab
+left join information_schema.table_constraints tco 
+          on tab.table_schema = tco.table_schema
+          and tab.table_name = tco.table_name 
+          and tco.constraint_type = 'PRIMARY KEY'
+where tab.table_type = 'BASE TABLE'
+      and tab.table_schema not in ('pg_catalog', 'information_schema')
+      and tco.constraint_name is null
+order by table_schema,
+         table_name;
+		 
+3. Query to find all schemas
+SELECT schema_name FROM information_schema.schemata;
+
+4. Query to find all schemas and their size.
+
+SELECT schema_name, 
+       round(sum(table_size)/1024/1024/1024,4) as "Schema Size GB",
+       round((sum(table_size) / pg_database_size(current_database())) * 100,4) as "Pct of DB SIZE"
+FROM (
+  SELECT pg_catalog.pg_namespace.nspname as schema_name,
+         pg_relation_size(pg_catalog.pg_class.oid) as table_size
+  FROM   pg_catalog.pg_class
+     JOIN pg_catalog.pg_namespace ON relnamespace = pg_catalog.pg_namespace.oid
+) t
+GROUP BY schema_name
+ORDER BY 2 desc ;	 
+
+
+5. Disable all indexes i.e. will not be updated by DML
+UPDATE pg_index
+SET indisready=false
+WHERE indrelid = (
+    SELECT oid
+    FROM pg_class
+    WHERE relname='<TABLE_NAME>'
+);
+
+6. Reindex table
+REINDEX <TABLE_NAME>;
+
+7. List Triggers and corresponding trigger event. ## production channel_manager, product_manager, order_manager, admin_central don't have any trigger.(4Feb20)
+select event_object_schema as table_schema,
+       event_object_table as table_name,
+       trigger_schema,
+       trigger_name,
+       string_agg(event_manipulation, ',') as event,
+       action_timing as activation,
+       action_condition as condition,
+       action_statement as definition
+from information_schema.triggers
+group by 1,2,3,4,6,7,8
+order by table_schema,
+         table_name;
+		 
+8. Find Largest 10 tables in database.
+select schemaname as table_schema,
+    relname as table_name,
+    pg_size_pretty(pg_total_relation_size(relid)) as total_size,
+    pg_size_pretty(pg_relation_size(relid)) as data_size,
+    pg_size_pretty(pg_total_relation_size(relid) - pg_relation_size(relid))
+      as external_size
+from pg_catalog.pg_statio_user_tables
+order by pg_total_relation_size(relid) desc,
+         pg_relation_size(relid) desc
+limit 10;		 
+		 
+		 
+9. Find all indexes and their status.
+
+select s.nspname as "Index_Schema",ct. relname as "Table_name" , ci.relname as "Index_name", i.indisready , i.indisvalid 
+from pg_Class ci, pg_index i , pg_namespace s , pg_class ct
+where i.indexrelid=ci.oid 
+and s.oid=ci.relnamespace
+and i.indrelid=ct.oid 
+and s.nspname not in ('public','pg_toast','pg_temp_1','pg_toast_temp_1','pg_catalog','information_schema')
+order by 1,2		 
+
+-----------------------------
+
+UPDATE pg_index
+SET indisready=false
+WHERE indrelid = (
+    SELECT oid
+    FROM pg_class
+    WHERE relname='<TABLE_NAME>'
+);
+
+
+select  count( distinct "Table_name")  from (
+select s.nspname as "Index_Schema",ct. relname as "Table_name" , ci.relname as "Index_name", i.indisready , i.indisvalid 
+from pg_Class ci, pg_index i , pg_namespace s , pg_class ct
+where i.indexrelid=ci.oid 
+and s.oid=ci.relnamespace
+and i.indrelid=ct.oid 
+and s.nspname not in ('public','pg_toast','pg_temp_1','pg_toast_temp_1','pg_catalog','information_schema')
+order by 1,2		
+)  a

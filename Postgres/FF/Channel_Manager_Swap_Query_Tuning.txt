@@ -1,0 +1,6 @@
+SELECT "versions".* FROM "versions" WHERE "versions"."versionable_type" = ? AND "versions"."versionable_id" = ? AND (created_at > ?)  ORDER BY "versions"."created_at" DESC
+
+15349:2020-01-06 23:53:22.340 GMT,"deploy","channel_manager",36557,"10.5.221.149:56675",5e12eed7.8ecd,24,"SELECT",2020-01-06 08:24:55 GMT,792/5750524,1146729918,LOG,00000,"duration: 19896.488 ms  execute a30923: SELECT  ""versions"".* FROM ""versions"" WHERE ""versions"".""versionable_id"" = $1 AND ""versions"".""versionable_type"" = $2  ORDER BY ""versions"".""created_at"" DESC LIMIT 1","parameters: $1 = '36234', $2 = 'ChannelItem'",,,,,,,,"petbarn 86cdfcbd1d128ad30c7b8bce"
+
+
+

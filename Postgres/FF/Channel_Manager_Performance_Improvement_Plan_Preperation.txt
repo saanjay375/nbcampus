@@ -13,7 +13,9 @@ pg_stat_statements.max = 10000
 pg_stat_statements.track = all
 track_io_timing = on
 
-
+alter system set effective_io_concurrency=16 ;
+alter system set  max_parallel_workers_per_gather=8 ;
+alter system setmax_worker_processes=16 ;
 
 grep -i -n default_statistics_target *|grep -v ':#'
 grep -i -n shared_preload_libraries *|grep -v ':#'
@@ -128,3 +130,51 @@ or as root execute below to staus/start/stop postgres
 /etc/init.d/postgresql-9.6 status
 /etc/init.d/postgresql-9.6 stop
 /etc/init.d/postgresql-9.6 start 
+
+
+
+Stop/Start/status SideKiq
+
+sudo monit stop all -g channel_manager_sidekiq 
+sudo monit start all -g channel_manager_sidekiq 
+sudo monit status all -g channel_manager_sidekiq 
+
+
+Check New Relic Status
+
+/etc/init.d/newrelic-infra status
+
+
+
+
+===========
+UK Env configuration
+2019-12-17 02:58:44.124 GMT: proc=29141,user=,db=,host= LOG:  redirecting log output to logging collector process
+2019-12-17 02:58:44.124 GMT: proc=29141,user=,db=,host= HINT:  Future log output will appear in directory "pg_log".
+2019-12-22 01:41:33.411 GMT: proc=29321,user=,db=,host= FATAL:  could not map anonymous shared memory: Cannot allocate memory
+2019-12-22 01:41:33.411 GMT: proc=29321,user=,db=,host= HINT:  This error usually means that PostgreSQL's request for a shared memory segment exceeded available memory, swap space, or huge pages. To reduce the request size (currently 35360956416 bytes), reduce PostgreSQL's shared memory usage, perhaps by reducing shared_buffers or max_connections.
+2019-12-22 01:41:33.411 GMT: proc=29321,user=,db=,host= LOG:  database system is shut down
+
+UK_production_channel_manager_v5
+cd /db/postgresql/9.6 
+chown root:root custom.conf ; chmod 644 custom.conf; 
+chown deploy:deploy custom_pg_hba.conf; chmod 644 custom_pg_hba.conf
+mkdir /db/postgresql/9.6/wal ; chown postgres:postgres /db/postgresql/9.6/wal; chmod 644 /db/postgresql/9.6/wal
+
+=============================================================================================================
+UK_production_product_manager_v5
+cd /db/postgresql/10
+chown deploy:deploy custom.conf ; chmod 644 custom.conf; 
+chown deploy:deploy custom_pg_hba.conf; chmod 644 custom_pg_hba.conf
+
+uk_production_order_manager_v5
+cd /db/postgresql/9.6 
+chown deploy:deploy custom.conf ; chmod 644 custom.conf; 
+chown deploy:deploy custom_pg_hba.conf; chmod 644 custom_pg_hba.conf
+
+UK_production_admin_manager_v5
+cd /db/postgresql/10
+chown deploy:deploy custom.conf ; chmod 644 custom.conf; 
+chown deploy:deploy custom_pg_hba.conf; chmod 644 custom_pg_hba.conf
+
+

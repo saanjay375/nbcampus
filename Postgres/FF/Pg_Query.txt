@@ -59,7 +59,38 @@ group by 1,2,3,4,6,7,8
 order by table_schema,
          table_name;
 		 
-		 
+--*
+Table, indexes and columns which are part of index
+select
+	n.nspname as Schema_Name,
+    t.relname as table_name,
+    i.relname as index_name,
+    array_to_string(array_agg(a.attname), ', ') as column_names
+from
+    pg_class t,
+    pg_class i,
+    pg_index ix,
+    pg_attribute a,
+	pg_namespace n
+where
+    t.oid = ix.indrelid
+	and n.oid=t.relnamespace
+    and i.oid = ix.indexrelid
+	and a.attrelid = t.oid
+    and a.attnum = ANY(ix.indkey)
+    and t.relkind = 'r'
+    and t.relname like 'scheduled_items'
+	and n.nspname='twoxu'
+group by
+    n.nspname,
+    t.relname,
+    i.relname
+order by
+    n.nspname,
+    t.relname,
+    i.relname;   
+
+	
 --* all databases and their sizes
 SELECT pg_database.datname as "database_name", pg_database_size(pg_database.datname)/1024/1024 AS size_in_mb FROM pg_database ORDER by size_in_mb DESC;
 
@@ -210,8 +241,7 @@ SELECT blocked_locks.pid     AS blocked_pid,
         AND blocking_locks.objid IS NOT DISTINCT FROM blocked_locks.objid
         AND blocking_locks.objsubid IS NOT DISTINCT FROM blocked_locks.objsubid
         AND blocking_locks.pid != blocked_locks.pid
- 
-    JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
+     JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
    WHERE NOT blocked_locks.GRANTED;
    
 --* Locks : With age information
@@ -585,9 +615,18 @@ Preset Options:
 	wal_segment_size 
 	segment_size: Reports the number of blocks (pages) that can be stored within a file segment. It is determined by the value of RELSEG_SIZE when building the server. The maximum size of a segment file in bytes is equal to segment_size multiplied by block_size; by default this is 1GB.
 	
+-------------------
+pd_dump :
+
+==> Only DDL backup of database	
+pg_dump -U postgres -d channel_manager --schema-only >channel_manager_ddl.txt
 	
-	
-	
+==> Only DDL backup of particular table from particular schema.
+pg_dump -U postgres -d channel_manager -t v3test20190212.scheduled_items  --schema-only >channel_manager_twoxu.scheduled_items_ddl.txt
+
+==> Only DDL backup of particular particular schema.	
+ pg_dump -U postgres -d channel_manager  -n 'v3test20190212' --schema-only >channel_manager_twoxu.scheduled_items_ddl.txt
+
 	
 	
 	
