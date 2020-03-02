@@ -2,6 +2,13 @@
 
 Monitor --
 
+--* Drop replication slot - it should be in inactive state.
+select pg_drop_replication_slot('slotname');
+
+You can find slot name from 
+select * from pg_replication_slots;
+
+
 --* Channel Manager database - incoming connections, grouped by application name
  select count(*),regexp_replace(application_name,' .*','') from pg_catalog.pg_stat_activity group by regexp_replace(application_name,' .*','')  ;
  

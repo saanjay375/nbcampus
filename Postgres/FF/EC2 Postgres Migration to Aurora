@@ -1,0 +1,17 @@
+=> Pre upgrade to 11
+
+=>Run Schema migration tool on existing database to confirm about the migration. This tool will generate a migration stats report. Then we can use DMS to migrate database to Aurora Postgres. AWS DMS transform can be useful in case of foreign key issues are there. 
+
+=> Aurora doesn't support immediate fallback to major previos verison database e.g. from 11 to 9.6. In thos case you habe take previous backup 9.6 backup, create new aurora cluster and resotre that backup.
+
+
+=> proxysql or maxscale --> AWS suggest to use proxysql for directing read queries to read replica.
+
+=> DMS migration can be helpful for table partitioning implement during migration but it is not encouraged by AWS support team.
+
+---------------------------------------------------
+=> AWS Athena on top of AWS Glue to read same data from all schemas.
+
+
+-----------------------------------------------------------------------------------
+Aurora postgresql clone is new feature to clone database.
