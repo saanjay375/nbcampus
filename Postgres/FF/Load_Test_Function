@@ -1,0 +1,60 @@
+
+create table test (id integer, fname varchar(20), lname varchar(20),status varchar(10),ctime timestamp)  ;
+
+CREATE OR REPLACE FUNCTION upload_test() RETURNS VOID  AS $$
+DECLARE
+  id integer :=1;
+  subid integer :=1;
+  fname varchar(200) := 'F';
+  lname varchar(200) := 'L' ;
+  randomstr varchar(5) ;
+BEGIN
+   insert into test(status,ctime) values ('started',clock_timestamp()) ;
+  FOR id in 1..1000000
+  LOOP
+     SELECT into randomstr array_to_string(ARRAY(SELECT chr((48 + round(random() * 9)) :: integer) FROM generate_series(1,5)), '')   ;
+	 fname := 'F'||randomstr ;
+	 lname := 'L'||randomstr ;
+     For subid in 1..10
+		LOOP
+		insert into test( id,fname,lname,status) values ( id,fname,lname,'insert') ;			
+	  End Loop;
+	  END LOOP;
+   insert into test(status,ctime) values ('finished',clock_timestamp()) ;
+END
+$$ LANGUAGE plpgsql;
+
+
+
+alter table schema_migrations add constraint schema_migrations_pkey  primary key using index unique_schema_migrations ;
+
+alter table schema_migrations drop constraint schema_migrations_pkey
+
+
+select upload_test() ;
+
+select * from test ;
+
+
+truncate table test ;
+
+echo "Server Performance - Load without indexes"
+
+echo "Server Performance - Load Table with 4 Composite indexes"
+
+echo "Server Performance - Load with 4 Sinle Column indexes"
+
+iostat -x 5 100000
+
+alter table test rename to test_without_indexes ;
+
+create index test_id_f_l on test(id,fname, lname) ;
+create index test_id_f_s on test(id,fname,status) ;
+create index test_id_l_s on test(id,lname,status) ;
+create index test_f_l_s on test(fname,lname,status) ;
+
+
+create index test_id on test(id) ;
+create index test_f on test(fname) ;
+create index test_l on test(lname) ;
+create index test_s on test(status) ;
