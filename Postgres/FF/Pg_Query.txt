@@ -634,7 +634,10 @@ pg_dump -U postgres -d channel_manager -t v3test20190212.scheduled_items  --sche
 ==> Only DDL backup of particular particular schema.	
  pg_dump -U postgres -d channel_manager  -n 'v3test20190212' --schema-only >channel_manager_twoxu.scheduled_items_ddl.txt
 
-	
+-------------------
+Change the location of database in serive file 
+e.g. you are running postgresql-13
+cd /lib/systemd/system/ ; open and update $PGDATA location in postgresql-13.service
 	
 	
 	
